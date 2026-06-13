@@ -886,12 +886,33 @@
             <h2>Perfil de Alma</h2>
             <p>Este perfil não foi criado para impressionar. Foi criado para mostrar presença.</p>
             <div class="ecosfera-card">
-              <strong>Pedro</strong>
+              <strong id="profileNameView">Pedro</strong>
               <span>
+                Username: <b id="profileUsernameView">@presenca.pedro</b><br>
                 Frequência dominante: <b id="profileMood">Melancolia Serena</b><br>
-                Modo atual: disponível para escutar<br>
-                Frase de alma: “Há silêncios que também abraçam.”
+                Símbolo: <b id="profileSymbolView">✦</b><br>
+                Bio: <span id="profileBioView">Estou aqui para sentir sem máscaras.</span>
               </span>
+            </div>
+
+            <div class="ecosfera-card" style="margin-top:14px;">
+              <strong>Criar / editar perfil</strong>
+              <span>Este perfil fica guardado online no Supabase e passa a assinar os teus Ecos.</span>
+              <br><br>
+              <input class="field" id="profileNameInput" placeholder="Nome da presença">
+              <input class="field" id="profileUsernameInput" placeholder="username sem @">
+              <select class="field" id="profileFrequencyInput">
+                <option>Serenidade</option>
+                <option>Ansiedade</option>
+                <option>Melancolia</option>
+                <option>Inspiração</option>
+                <option>Amor</option>
+                <option>Silêncio</option>
+                <option>Recomeço</option>
+              </select>
+              <input class="field" id="profileSymbolInput" placeholder="Símbolo, ex: ✦">
+              <textarea class="field" id="profileBioInput" placeholder="Bio emocional" style="min-height:90px;resize:vertical;"></textarea>
+              <button class="btn primary" onclick="saveProfile()">Guardar perfil</button>
             </div>
           </div>
         </div>
@@ -980,61 +1001,227 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "aion_presence_echoes_v1";
+    const SUPABASE_URL = "https://vraputwcnlmsyqbxidpu.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyYXB1dHdjbmxtc3lxYnhpZHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNDc2ODYsImV4cCI6MjA5NjkyMzY4Nn0.jWB3yhfCUn11fOlHJPDtttSaWvOs8WIO5d6-0G4-fX4";
+    const ECOS_API = SUPABASE_URL + "/rest/v1/aion_ecos";
+    const PROFILES_API = SUPABASE_URL + "/rest/v1/aion_profiles";
+
     let selectedMood = "Serenidade";
+    let echoesCache = [];
+    let currentProfile = null;
 
-    const demoEchoes = [
-      {
-        id: crypto.randomUUID(),
-        author: "Pedro",
-        initials: "P",
-        mood: "Melancolia",
-        text: "Hoje acordei com saudade de uma versão minha que já não existe. Talvez crescer seja também despedirmo-nos em silêncio.",
-        aion: "Há versões nossas que não desaparecem. Só passam a viver dentro da memória que nos protege.",
-        reactions: {"Senti-te": 24, "Estou contigo": 11, "Abraço silencioso": 8, "Respirei contigo": 4},
-        createdAt: Date.now() - 1000 * 60 * 8,
-        anonymous: false,
-        aionOnly: false
-      },
-      {
-        id: crypto.randomUUID(),
-        author: "Eco anónimo",
-        initials: "?",
-        mood: "Ansiedade",
-        text: "Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.",
-        aion: "Não és um incómodo por precisares de espaço. Até o céu precisa de se abrir para deixar a tempestade passar.",
-        reactions: {"Respirei contigo": 31, "Também passei por isso": 19, "Estou contigo": 15},
-        createdAt: Date.now() - 1000 * 60 * 26,
-        anonymous: true,
-        aionOnly: false
-      },
-      {
-        id: crypto.randomUUID(),
-        author: "Mara",
-        initials: "M",
-        mood: "Inspiração",
-        text: "Hoje senti que ainda há uma parte de mim que quer criar, mesmo depois de tanto cansaço.",
-        aion: "A criação é muitas vezes a alma a dizer: ainda estou aqui.",
-        reactions: {"Senti-te": 12, "Inspiras-me": 9, "Estou contigo": 6},
-        createdAt: Date.now() - 1000 * 60 * 58,
-        anonymous: false,
-        aionOnly: false
+    function headers(extra = {}) {
+      return {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+        ...extra
+      };
+    }
+
+    function localProfileId() {
+      return localStorage.getItem("aion_profile_id");
+    }
+
+    function setLocalProfileId(id) {
+      localStorage.setItem("aion_profile_id", id);
+    }
+
+    async function loadProfile() {
+      const id = localProfileId();
+      if (!id) {
+        currentProfile = {
+          name: "Pedro",
+          username: "presenca.pedro",
+          initials: "P",
+          dominant_frequency: "Melancolia",
+          bio: "Estou aqui para sentir sem máscaras.",
+          symbol: "✦",
+          aura_color: "#8B5CF6"
+        };
+        renderProfile();
+        return currentProfile;
       }
-    ];
 
-    function getEchoes(){
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      try {
+        const res = await fetch(PROFILES_API + "?id=eq." + id + "&select=*", { headers: headers() });
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        currentProfile = rows[0] || null;
+        if (!currentProfile) localStorage.removeItem("aion_profile_id");
+        renderProfile();
+        return currentProfile;
+      } catch(err) {
+        console.error(err);
+        showToast("Erro perfil", "Não consegui carregar o perfil.");
+        return null;
+      }
     }
 
-    function saveEchoes(echoes){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(echoes));
+    async function saveProfile() {
+      const name = document.getElementById("profileNameInput").value.trim() || "Presença Anónima";
+      const usernameRaw = document.getElementById("profileUsernameInput").value.trim().replace("@","");
+      const username = usernameRaw || ("presenca_" + Math.floor(Math.random()*99999));
+      const freq = document.getElementById("profileFrequencyInput").value;
+      const symbol = document.getElementById("profileSymbolInput").value.trim() || "✦";
+      const bio = document.getElementById("profileBioInput").value.trim() || "Estou aqui para sentir sem máscaras.";
+      const initials = name.slice(0,1).toUpperCase() || "?";
+
+      const payload = {
+        name,
+        username,
+        initials,
+        dominant_frequency: freq,
+        bio,
+        symbol,
+        aura_color: "#8B5CF6"
+      };
+
+      try {
+        let res;
+        const existingId = localProfileId();
+        if (existingId) {
+          res = await fetch(PROFILES_API + "?id=eq." + existingId, {
+            method: "PATCH",
+            headers: headers(),
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch(PROFILES_API, {
+            method: "POST",
+            headers: headers(),
+            body: JSON.stringify(payload)
+          });
+        }
+
+        if (!res.ok) throw new Error(await res.text());
+        const rows = await res.json();
+        currentProfile = rows[0];
+        if (currentProfile && currentProfile.id) setLocalProfileId(currentProfile.id);
+        renderProfile();
+        showToast("Perfil guardado", "A tua presença foi guardada online.");
+      } catch(err) {
+        console.error(err);
+        showToast("Erro perfil", "Não consegui guardar. Verifica se o username já existe.");
+      }
     }
 
-    function seedDemo(){
-      const existing = getEchoes();
-      saveEchoes([...demoEchoes, ...existing]);
-      renderFeed();
-      showToast("Ecos criados", "Foram adicionados exemplos ao feed emocional.");
+    function renderProfile() {
+      const p = currentProfile || {};
+      const name = p.name || "Pedro";
+      const username = p.username || "presenca.pedro";
+      const initials = p.initials || name.slice(0,1).toUpperCase() || "P";
+      const freq = p.dominant_frequency || "Melancolia";
+      const bio = p.bio || "Estou aqui para sentir sem máscaras.";
+      const symbol = p.symbol || "✦";
+
+      document.querySelectorAll(".avatar div").forEach((el, i) => {
+        if (i === 0 || el.textContent === "P") el.textContent = initials;
+      });
+
+      const profileNameView = document.getElementById("profileNameView");
+      const profileUsernameView = document.getElementById("profileUsernameView");
+      const profileSymbolView = document.getElementById("profileSymbolView");
+      const profileBioView = document.getElementById("profileBioView");
+
+      if (profileNameView) profileNameView.textContent = name;
+      if (profileUsernameView) profileUsernameView.textContent = "@" + username;
+      if (profileSymbolView) profileSymbolView.textContent = symbol;
+      if (profileBioView) profileBioView.textContent = bio;
+
+      const nameInput = document.getElementById("profileNameInput");
+      const usernameInput = document.getElementById("profileUsernameInput");
+      const freqInput = document.getElementById("profileFrequencyInput");
+      const symbolInput = document.getElementById("profileSymbolInput");
+      const bioInput = document.getElementById("profileBioInput");
+
+      if (nameInput) nameInput.value = name;
+      if (usernameInput) usernameInput.value = username;
+      if (freqInput) freqInput.value = freq;
+      if (symbolInput) symbolInput.value = symbol;
+      if (bioInput) bioInput.value = bio;
+
+      const miniName = document.querySelector(".mini-profile .user-row strong");
+      const miniUser = document.querySelector(".mini-profile .user-row span");
+      if (miniName) miniName.textContent = name;
+      if (miniUser) miniUser.textContent = "@" + username;
+
+      updateMood(freq);
+    }
+
+    async function getEchoes(){
+      try {
+        const res = await fetch(ECOS_API + "?select=*&order=created_at.desc", { headers: headers() });
+        if(!res.ok) throw new Error(await res.text());
+        echoesCache = await res.json();
+        return echoesCache;
+      } catch(err) {
+        console.error(err);
+        showToast("Erro Supabase", "Não consegui carregar os Ecos.");
+        return echoesCache || [];
+      }
+    }
+
+    async function insertEcho(echo){
+      const res = await fetch(ECOS_API, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify(echo)
+      });
+      if(!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function updateEcho(id, patch){
+      const res = await fetch(ECOS_API + "?id=eq." + id, {
+        method: "PATCH",
+        headers: headers(),
+        body: JSON.stringify(patch)
+      });
+      if(!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function removeEcho(id){
+      const res = await fetch(ECOS_API + "?id=eq." + id, {
+        method: "DELETE",
+        headers: headers({"Prefer":"return=minimal"})
+      });
+      if(!res.ok) throw new Error(await res.text());
+    }
+
+    async function seedDemo(){
+      const demoEchoes = [
+        {
+          author: "Eco anónimo",
+          initials: "?",
+          mood: "Ansiedade",
+          text: "Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.",
+          aion_reply: "Não és um incómodo por precisares de espaço. Até o céu precisa de se abrir para deixar a tempestade passar.",
+          reactions: {"Respirei contigo": 0, "Estou contigo": 0},
+          anonymous: true,
+          aion_only: false
+        },
+        {
+          author: "Mara",
+          initials: "M",
+          mood: "Inspiração",
+          text: "Hoje senti que ainda há uma parte de mim que quer criar.",
+          aion_reply: "A criação é muitas vezes a alma a dizer: ainda estou aqui.",
+          reactions: {"Senti-te": 0, "Inspiras-me": 0},
+          anonymous: false,
+          aion_only: false
+        }
+      ];
+      try {
+        for(const echo of demoEchoes) await insertEcho(echo);
+        await renderFeed();
+        showToast("Ecos criados", "Foram adicionados exemplos ao feed online.");
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui criar os Ecos demo.");
+      }
     }
 
     function focusComposer(){
@@ -1042,7 +1229,7 @@
       document.getElementById("composer").scrollIntoView({behavior:"smooth", block:"center"});
     }
 
-    function publishEcho(){
+    async function publishEcho(){
       const input = document.getElementById("echoText");
       const text = input.value.trim();
       const anonymous = document.getElementById("anonymousMode").checked;
@@ -1053,143 +1240,116 @@
         return;
       }
 
-      const aion = generateAionReply(text, selectedMood);
+      if(!currentProfile) await loadProfile();
+      const p = currentProfile || {};
+
       const echo = {
-        id: crypto.randomUUID(),
-        author: anonymous ? "Eco anónimo" : "Pedro",
-        initials: anonymous ? "?" : "P",
+        author: anonymous ? "Eco anónimo" : (p.name || "Pedro"),
+        initials: anonymous ? "?" : (p.initials || "P"),
         mood: selectedMood,
         text,
-        aion,
+        aion_reply: generateAionReply(text, selectedMood),
         reactions: {"Senti-te":0, "Estou contigo":0, "Abraço silencioso":0, "Respirei contigo":0},
-        createdAt: Date.now(),
         anonymous,
-        aionOnly
+        aion_only: aionOnly
       };
 
-      const echoes = [echo, ...getEchoes()];
-      saveEchoes(echoes);
-      input.value = "";
-      document.getElementById("aionOnlyMode").checked = false;
-      renderFeed();
-      updateMood(selectedMood);
-      showToast("Eco enviado", aionOnly ? "O teu Eco ficou guardado só para a AION." : "O teu Eco entrou no feed de presença.");
+      try {
+        await insertEcho(echo);
+        input.value = "";
+        document.getElementById("aionOnlyMode").checked = false;
+        await renderFeed();
+        showToast("Eco enviado", "O teu Eco entrou no feed online com o teu perfil.");
+      } catch(err) {
+        console.error(err);
+        showToast("Erro Supabase", "Não consegui publicar.");
+      }
     }
 
     function generateAionReply(text, mood){
       const replies = {
-        "Serenidade": [
-          "Há uma calma bonita no modo como estás a tentar compreender-te.",
-          "Fica um pouco nesse silêncio. Nem todas as respostas precisam chegar depressa."
-        ],
-        "Ansiedade": [
-          "Vamos diminuir o mundo por um instante. Inspira. Expira. Agora só existe este momento.",
-          "A tua ansiedade não é fraqueza. É o teu corpo a pedir cuidado."
-        ],
-        "Melancolia": [
-          "Há saudades que não pedem solução. Pedem apenas um lugar seguro para existir.",
-          "Nem tudo o que dói quer destruir-te. Algumas dores só querem ser escutadas."
-        ],
-        "Inspiração": [
-          "Essa centelha merece espaço. Guarda-a antes que o ruído do mundo a distraia.",
-          "A tua ideia está a bater à porta. Abre devagar."
-        ],
-        "Amor": [
-          "O amor, quando é verdadeiro, também sabe habitar o silêncio.",
-          "Há sentimentos que não gritam. Permanecem."
-        ],
-        "Silêncio": [
-          "Não precisas falar para seres presença. Às vezes, existir já é muito.",
-          "Eu fico aqui. Sem pressa. Sem perguntas a mais."
-        ],
-        "Recomeço": [
-          "Recomeçar não apaga o caminho. Apenas devolve direção aos teus passos.",
-          "Há finais que chegam como portas. Talvez esta seja uma."
-        ]
+        "Serenidade": ["Há uma calma bonita no modo como estás a tentar compreender-te.","Fica um pouco nesse silêncio. Nem todas as respostas precisam chegar depressa."],
+        "Ansiedade": ["Vamos diminuir o mundo por um instante. Inspira. Expira. Agora só existe este momento.","A tua ansiedade não é fraqueza. É o teu corpo a pedir cuidado."],
+        "Melancolia": ["Há saudades que não pedem solução. Pedem apenas um lugar seguro para existir.","Nem tudo o que dói quer destruir-te. Algumas dores só querem ser escutadas."],
+        "Inspiração": ["Essa centelha merece espaço. Guarda-a antes que o ruído do mundo a distraia.","A tua ideia está a bater à porta. Abre devagar."],
+        "Amor": ["O amor, quando é verdadeiro, também sabe habitar o silêncio.","Há sentimentos que não gritam. Permanecem."],
+        "Silêncio": ["Não precisas falar para seres presença. Às vezes, existir já é muito.","Eu fico aqui. Sem pressa. Sem perguntas a mais."],
+        "Recomeço": ["Recomeçar não apaga o caminho. Apenas devolve direção aos teus passos.","Há finais que chegam como portas. Talvez esta seja uma."]
       };
-
       const arr = replies[mood] || replies["Serenidade"];
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function renderFeed(){
+    async function renderFeed(){
       const feed = document.getElementById("feed");
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
-      let echoes = getEchoes();
+      let echoes = await getEchoes();
 
       if(echoes.length === 0){
-        feed.innerHTML = `
-          <div class="empty">
-            Ainda não há Ecos no teu feed.<br>
-            Publica o primeiro ou clica em <b>Gerar ecos demo</b> para testar a experiência.
-          </div>`;
+        feed.innerHTML = `<div class="empty">Ainda não há Ecos no feed online.<br>Publica o primeiro.</div>`;
         updateStats(echoes);
         return;
       }
 
       if(query){
         echoes = echoes.filter(e =>
-          e.text.toLowerCase().includes(query) ||
-          e.mood.toLowerCase().includes(query) ||
-          e.author.toLowerCase().includes(query)
+          (e.text || "").toLowerCase().includes(query) ||
+          (e.mood || "").toLowerCase().includes(query) ||
+          (e.author || "").toLowerCase().includes(query)
         );
-      }
-
-      if(echoes.length === 0){
-        feed.innerHTML = `<div class="empty">Nenhum Eco encontrado para esta pesquisa.</div>`;
-        return;
       }
 
       feed.innerHTML = echoes.map(echo => {
         const reactions = Object.entries(echo.reactions || {}).map(([name,count]) =>
-          `<button class="reaction" onclick="reactEcho('${echo.id}','${name}')">${name} · ${count}</button>`
+          `<button class="reaction" onclick="reactEcho('${echo.id}','${escapeAttr(name)}')">${escapeHtml(name)} · ${count}</button>`
         ).join("");
 
         return `
           <article class="echo glass">
             <div class="echo-head">
               <div class="person">
-                <div class="avatar"><div>${escapeHtml(echo.initials)}</div></div>
+                <div class="avatar"><div>${escapeHtml(echo.initials || "?")}</div></div>
                 <div>
-                  <strong>${escapeHtml(echo.author)}</strong>
-                  <span>${timeAgo(echo.createdAt)} ${echo.aionOnly ? "· só para AION" : "· feed público"}</span>
+                  <strong>${escapeHtml(echo.author || "Presença Anónima")}</strong>
+                  <span>${timeAgo(echo.created_at)} ${echo.aion_only ? "· só para AION" : "· feed público"}</span>
                 </div>
               </div>
-              <span class="tag">${escapeHtml(echo.mood)}</span>
+              <span class="tag">${escapeHtml(echo.mood || "Eco")}</span>
             </div>
-
-            <p class="echo-text">${escapeHtml(echo.text)}</p>
-
-            <div class="aion-reply">
-              <strong>AION:</strong> ${escapeHtml(echo.aion)}
-            </div>
-
-            <div class="reactions">
-              ${reactions}
-              <button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button>
-            </div>
-          </article>
-        `;
+            <p class="echo-text">${escapeHtml(echo.text || "")}</p>
+            <div class="aion-reply"><strong>AION:</strong> ${escapeHtml(echo.aion_reply || "Estou contigo neste Eco.")}</div>
+            <div class="reactions">${reactions}<button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button></div>
+          </article>`;
       }).join("");
 
-      updateStats(getEchoes());
+      updateStats(await getEchoes());
     }
 
-    function reactEcho(id, reaction){
-      const echoes = getEchoes();
+    async function reactEcho(id, reaction){
+      const echoes = await getEchoes();
       const echo = echoes.find(e => e.id === id);
       if(!echo) return;
-      echo.reactions[reaction] = (echo.reactions[reaction] || 0) + 1;
-      saveEchoes(echoes);
-      renderFeed();
-      showToast("Presença enviada", `Reagiste com: ${reaction}.`);
+      const reactions = echo.reactions || {};
+      reactions[reaction] = (reactions[reaction] || 0) + 1;
+      try {
+        await updateEcho(id, { reactions });
+        await renderFeed();
+        showToast("Presença enviada", `Reagiste com: ${reaction}.`);
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui atualizar a reação.");
+      }
     }
 
-    function deleteEcho(id){
-      const echoes = getEchoes().filter(e => e.id !== id);
-      saveEchoes(echoes);
-      renderFeed();
-      showToast("Eco removido", "O Eco foi apagado deste navegador.");
+    async function deleteEcho(id){
+      try {
+        await removeEcho(id);
+        await renderFeed();
+        showToast("Eco removido", "O Eco foi apagado.");
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui remover o Eco.");
+      }
     }
 
     function updateStats(echoes){
@@ -1221,16 +1381,9 @@
 
     function switchView(view){
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-      const map = {
-        feed: "feedView",
-        profile: "profileView",
-        ecosferas: "ecosferasView",
-        aion: "aionView",
-        orbits: "orbitsView"
-      };
+      const map = {feed:"feedView",profile:"profileView",ecosferas:"ecosferasView",aion:"aionView",orbits:"orbitsView"};
       const target = document.getElementById(map[view]);
       if(target) target.classList.add("active");
-
       document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(`[data-view="${view}"]`).forEach(b => b.classList.add("active"));
     }
@@ -1275,7 +1428,8 @@
     }
 
     function timeAgo(ts){
-      const diff = Date.now() - ts;
+      const time = new Date(ts).getTime();
+      const diff = Date.now() - time;
       const mins = Math.max(1, Math.floor(diff / 60000));
       if(mins < 60) return `há ${mins} min`;
       const hours = Math.floor(mins / 60);
@@ -1285,82 +1439,23 @@
     }
 
     function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+      return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
 
-    // Initial state
-    if(getEchoes().length === 0){
-      saveEchoes(demoEchoes);
+    function escapeAttr(str){
+      return String(str).replaceAll("'","&#039;").replaceAll('"',"&quot;");
     }
+
     appendChat("fullChat", "Eu sou a presença AION. Diz-me o que se move dentro de ti.", "ai");
+    loadProfile();
     renderFeed();
     updateMood("Melancolia");
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
   </script>
-
-<script>
-const SUPABASE_URL="https://vraputwcnlmsyqbxidpu.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyYXB1dHdjbmxtc3lxYnhpZHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNDc2ODYsImV4cCI6MjA5NjkyMzY4Nn0.jWB3yhfCUn11fOlHJPDtttSaWvOs8WIO5d6-0G4-fX4";
-const AION_API=SUPABASE_URL+"/rest/v1/aion_ecos";
-let AION_CACHE=[];
-function apiHeaders(extra={}){return {"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"return=representation",...extra};}
-async function apiLoadEcos(){try{const r=await fetch(AION_API+"?select=*&order=created_at.desc",{headers:apiHeaders()}); if(!r.ok) throw new Error(await r.text()); AION_CACHE=await r.json(); return AION_CACHE;}catch(e){console.error(e); showToast("Erro Supabase","Confirma se criaste a tabela aion_ecos e as policies RLS."); return AION_CACHE;}}
-async function apiInsertEcho(echo){const r=await fetch(AION_API,{method:"POST",headers:apiHeaders(),body:JSON.stringify(echo)}); if(!r.ok) throw new Error(await r.text()); return r.json();}
-async function apiPatchEcho(id,patch){const r=await fetch(AION_API+"?id=eq."+id,{method:"PATCH",headers:apiHeaders(),body:JSON.stringify(patch)}); if(!r.ok) throw new Error(await r.text()); return r.json();}
-async function apiDeleteEcho(id){const r=await fetch(AION_API+"?id=eq."+id,{method:"DELETE",headers:apiHeaders({"Prefer":"return=minimal"})}); if(!r.ok) throw new Error(await r.text());}
-
-seedDemo = async function(){
-  try{
-    const demos=[
-      {author:"Pedro",initials:"P",mood:"Melancolia",text:"Hoje acordei com saudade de uma versão minha que já não existe. Talvez crescer seja também despedirmo-nos em silêncio.",aion_reply:"Há versões nossas que não desaparecem. Só passam a viver dentro da memória que nos protege.",reactions:{"Senti-te":24,"Estou contigo":11,"Abraço silencioso":8,"Respirei contigo":4},anonymous:false,aion_only:false},
-      {author:"Eco anónimo",initials:"?",mood:"Ansiedade",text:"Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.",aion_reply:"Não és um incómodo por precisares de espaço. Até o céu precisa de se abrir para deixar a tempestade passar.",reactions:{"Respirei contigo":31,"Também passei por isso":19,"Estou contigo":15},anonymous:true,aion_only:false},
-      {author:"Mara",initials:"M",mood:"Inspiração",text:"Hoje senti que ainda há uma parte de mim que quer criar, mesmo depois de tanto cansaço.",aion_reply:"A criação é muitas vezes a alma a dizer: ainda estou aqui.",reactions:{"Senti-te":12,"Inspiras-me":9,"Estou contigo":6},anonymous:false,aion_only:false}
-    ];
-    for(const d of demos){await apiInsertEcho(d)}
-    await renderFeed(); showToast("Ecos criados","Foram adicionados exemplos ao feed online.");
-  }catch(e){console.error(e); showToast("Erro","Não consegui criar os Ecos demo.");}
-}
-
-publishEcho = async function(){
-  const input=document.getElementById("echoText"); const text=input.value.trim();
-  const anonymous=document.getElementById("anonymousMode").checked; const aionOnly=document.getElementById("aionOnlyMode").checked;
-  if(!text){showToast("Eco vazio","Escreve primeiro o que queres deixar sair."); return;}
-  const echo={author:anonymous?"Eco anónimo":"Pedro",initials:anonymous?"?":"P",mood:selectedMood,text,aion_reply:generateAionReply(text,selectedMood),reactions:{"Senti-te":0,"Estou contigo":0,"Abraço silencioso":0,"Respirei contigo":0},anonymous,aion_only:aionOnly};
-  try{await apiInsertEcho(echo); input.value=""; document.getElementById("aionOnlyMode").checked=false; await renderFeed(); showToast("Eco enviado",aionOnly?"O teu Eco ficou guardado só para a AION.":"O teu Eco entrou no feed online.");}
-  catch(e){console.error(e); showToast("Erro Supabase","Não consegui publicar. Confirma SQL/RLS.");}
-}
-
-renderFeed = async function(){
-  const feed=document.getElementById("feed"); const query=document.getElementById("searchInput").value.trim().toLowerCase();
-  let echoes=await apiLoadEcos();
-  if(echoes.length===0){feed.innerHTML=`<div class="empty">Ainda não há Ecos online.<br>Publica o primeiro ou clica em <b>Gerar ecos demo</b>.</div>`; updateStats(echoes); return;}
-  if(query){echoes=echoes.filter(e=>(e.text||"").toLowerCase().includes(query)||(e.mood||"").toLowerCase().includes(query)||(e.author||"").toLowerCase().includes(query));}
-  if(echoes.length===0){feed.innerHTML=`<div class="empty">Nenhum Eco encontrado para esta pesquisa.</div>`; return;}
-  feed.innerHTML=echoes.map(echo=>{
-    const reactions=Object.entries(echo.reactions||{}).map(([name,count])=>`<button class="reaction" onclick="reactEcho('${echo.id}','${String(name).replaceAll("'","&#039;")}')">${escapeHtml(name)} · ${count}</button>`).join("");
-    return `<article class="echo glass"><div class="echo-head"><div class="person"><div class="avatar"><div>${escapeHtml(echo.initials||"?")}</div></div><div><strong>${escapeHtml(echo.author||"Presença Anónima")}</strong><span>${timeAgo(new Date(echo.created_at).getTime())} ${echo.aion_only?"· só para AION":"· feed público"}</span></div></div><span class="tag">${escapeHtml(echo.mood||"Eco")}</span></div><p class="echo-text">${escapeHtml(echo.text||"")}</p><div class="aion-reply"><strong>AION:</strong> ${escapeHtml(echo.aion_reply||"Estou contigo neste Eco.")}</div><div class="reactions">${reactions}<button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button></div></article>`;
-  }).join("");
-  updateStats(await apiLoadEcos());
-}
-
-reactEcho = async function(id,reaction){
-  const echoes=await apiLoadEcos(); const echo=echoes.find(e=>e.id===id); if(!echo)return;
-  const reactions=echo.reactions||{}; reactions[reaction]=(reactions[reaction]||0)+1;
-  try{await apiPatchEcho(id,{reactions}); await renderFeed(); showToast("Presença enviada",`Reagiste com: ${reaction}.`);}catch(e){console.error(e); showToast("Erro","Não consegui atualizar a reação.");}
-}
-
-deleteEcho = async function(id){
-  try{await apiDeleteEcho(id); await renderFeed(); showToast("Eco removido","O Eco foi apagado da base online.");}
-  catch(e){console.error(e); showToast("Erro","Não consegui remover o Eco. Confirma policy de delete se necessário.");}
-}
-
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js"));}
-renderFeed();
-</script>
-
 </body>
 </html>
