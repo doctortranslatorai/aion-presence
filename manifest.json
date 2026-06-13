@@ -1,0 +1,10 @@
+{
+  "name": "The Unwritten Human",
+  "short_name": "Unwritten",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#03030b",
+  "theme_color": "#03030b",
+  "orientation": "portrait",
+  "icons": []
+}
