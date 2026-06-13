@@ -1,4 +1,4 @@
-const CACHE_NAME = "aion-presence-v13-profiles";
+const CACHE_NAME = "aion-presence-v14-orbits";
 const FILES_TO_CACHE = ["./","./index.html","./app.html","./manifest.json","./icon-192.png","./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE)));
