@@ -1,7 +1,7 @@
 {
   "name": "AION Presence",
   "short_name": "AION",
-  "description": "Rede social emocional com Órbitas reais no Supabase.",
+  "description": "Rede social emocional com notificações reais no Supabase.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

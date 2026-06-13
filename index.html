@@ -818,6 +818,7 @@
         <button data-view="ecosferas"><span class="ico">◌</span> Ecosferas</button>
         <button data-view="aion"><span class="ico">◈</span> AION</button>
         <button data-view="orbits"><span class="ico">∞</span> Órbitas</button>
+        <button data-view="notifications"><span class="ico">◉</span> Sinais <b id="notifBadgeSide" style="margin-left:auto;color:#39D8FF">0</b></button>
         <button data-view="profile"><span class="ico">☾</span> Perfil de Alma</button>
       </nav>
 
@@ -942,6 +943,20 @@
         </div>
       </section>
 
+
+      <section id="notificationsView" class="orbits-view glass view">
+        <h2>Sinais recebidos</h2>
+        <p>Notificações emocionais: reações, órbitas e mensagens da AION.</p>
+        <div class="profile-stats">
+          <div class="stat"><strong id="statUnreadNotifications">0</strong><span>Por ler</span></div>
+          <div class="stat"><strong id="statAllNotifications">0</strong><span>Total</span></div>
+          <div class="stat"><strong id="statEmotionalSignals">0</strong><span>Sinais</span></div>
+        </div>
+        <div class="orbits-list" id="notificationsList"></div>
+        <br>
+        <button class="btn primary" onclick="markAllNotificationsRead()">Marcar tudo como lido</button>
+      </section>
+
       <section id="orbitsView" class="orbits-view glass view">
         <h2>Órbitas</h2>
         <p>Em vez de seguidores, presenças com quem criaste ressonância.</p>
@@ -999,6 +1014,7 @@
     <button data-view="ecosferas">◌</button>
     <button data-view="aion">◈</button>
     <button data-view="orbits">∞</button>
+    <button data-view="notifications">◉</button>
     <button data-view="profile">☾</button>
   </nav>
 
@@ -1013,12 +1029,14 @@
     const ECOS_API = SUPABASE_URL + "/rest/v1/aion_ecos";
     const PROFILES_API = SUPABASE_URL + "/rest/v1/aion_profiles";
     const ORBITS_API = SUPABASE_URL + "/rest/v1/aion_orbits";
+    const NOTIFICATIONS_API = SUPABASE_URL + "/rest/v1/aion_notifications";
 
     let selectedMood = "Serenidade";
     let echoesCache = [];
     let currentProfile = null;
     let profilesCache = [];
     let orbitsCache = [];
+    let notificationsCache = [];
 
     function headers(extra = {}) {
       return {
@@ -1030,16 +1048,23 @@
       };
     }
 
-    function localProfileId() {
-      return localStorage.getItem("aion_profile_id");
-    }
-
-    function setLocalProfileId(id) {
-      localStorage.setItem("aion_profile_id", id);
-    }
+    function localProfileId() { return localStorage.getItem("aion_profile_id"); }
+    function setLocalProfileId(id) { localStorage.setItem("aion_profile_id", id); }
 
     async function supaGet(url) {
       const res = await fetch(url, { headers: headers() });
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function supaPost(url, payload) {
+      const res = await fetch(url, { method:"POST", headers:headers(), body:JSON.stringify(payload) });
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function supaPatch(url, payload) {
+      const res = await fetch(url, { method:"PATCH", headers:headers(), body:JSON.stringify(payload) });
       if (!res.ok) throw new Error(await res.text());
       return await res.json();
     }
@@ -1048,13 +1073,9 @@
       const id = localProfileId();
       if (!id) {
         currentProfile = {
-          name: "Pedro",
-          username: "presenca.pedro",
-          initials: "P",
-          dominant_frequency: "Melancolia",
-          bio: "Estou aqui para sentir sem máscaras.",
-          symbol: "✦",
-          aura_color: "#8B5CF6"
+          name: "Pedro", username: "presenca.pedro", initials: "P",
+          dominant_frequency: "Melancolia", bio: "Estou aqui para sentir sem máscaras.",
+          symbol: "✦", aura_color: "#8B5CF6"
         };
         renderProfile();
         return currentProfile;
@@ -1065,6 +1086,7 @@
         currentProfile = rows[0] || null;
         if (!currentProfile) localStorage.removeItem("aion_profile_id");
         renderProfile();
+        await renderNotifications();
         return currentProfile;
       } catch(err) {
         console.error(err);
@@ -1081,33 +1103,19 @@
       const symbol = document.getElementById("profileSymbolInput").value.trim() || "✦";
       const bio = document.getElementById("profileBioInput").value.trim() || "Estou aqui para sentir sem máscaras.";
       const initials = name.slice(0,1).toUpperCase() || "?";
-
-      const payload = {
-        name, username, initials,
-        dominant_frequency: freq,
-        bio, symbol,
-        aura_color: "#8B5CF6"
-      };
+      const payload = { name, username, initials, dominant_frequency:freq, bio, symbol, aura_color:"#8B5CF6" };
 
       try {
-        let res;
+        let rows;
         const existingId = localProfileId();
-        if (existingId) {
-          res = await fetch(PROFILES_API + "?id=eq." + existingId, {
-            method: "PATCH", headers: headers(), body: JSON.stringify(payload)
-          });
-        } else {
-          res = await fetch(PROFILES_API, {
-            method: "POST", headers: headers(), body: JSON.stringify(payload)
-          });
-        }
-
-        if (!res.ok) throw new Error(await res.text());
-        const rows = await res.json();
+        if (existingId) rows = await supaPatch(PROFILES_API + "?id=eq." + existingId, payload);
+        else rows = await supaPost(PROFILES_API, payload);
         currentProfile = rows[0];
         if (currentProfile && currentProfile.id) setLocalProfileId(currentProfile.id);
         renderProfile();
         await renderOrbits();
+        await createNotification(currentProfile.id, "profile", "Perfil guardado", "A tua presença foi atualizada com sucesso.");
+        await renderNotifications();
         showToast("Perfil guardado", "A tua presença foi guardada online.");
       } catch(err) {
         console.error(err);
@@ -1128,33 +1136,22 @@
         if (i === 0 || el.textContent === "P") el.textContent = initials;
       });
 
-      const profileNameView = document.getElementById("profileNameView");
-      const profileUsernameView = document.getElementById("profileUsernameView");
-      const profileSymbolView = document.getElementById("profileSymbolView");
-      const profileBioView = document.getElementById("profileBioView");
+      const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+      set("profileNameView", name);
+      set("profileUsernameView", "@" + username);
+      set("profileSymbolView", symbol);
+      set("profileBioView", bio);
 
-      if (profileNameView) profileNameView.textContent = name;
-      if (profileUsernameView) profileUsernameView.textContent = "@" + username;
-      if (profileSymbolView) profileSymbolView.textContent = symbol;
-      if (profileBioView) profileBioView.textContent = bio;
-
-      const nameInput = document.getElementById("profileNameInput");
-      const usernameInput = document.getElementById("profileUsernameInput");
-      const freqInput = document.getElementById("profileFrequencyInput");
-      const symbolInput = document.getElementById("profileSymbolInput");
-      const bioInput = document.getElementById("profileBioInput");
-
-      if (nameInput) nameInput.value = name;
-      if (usernameInput) usernameInput.value = username;
-      if (freqInput) freqInput.value = freq;
-      if (symbolInput) symbolInput.value = symbol;
-      if (bioInput) bioInput.value = bio;
+      const vals = [
+        ["profileNameInput", name], ["profileUsernameInput", username],
+        ["profileFrequencyInput", freq], ["profileSymbolInput", symbol], ["profileBioInput", bio]
+      ];
+      vals.forEach(([id,val]) => { const el=document.getElementById(id); if(el) el.value=val; });
 
       const miniName = document.querySelector(".mini-profile .user-row strong");
       const miniUser = document.querySelector(".mini-profile .user-row span");
       if (miniName) miniName.textContent = name;
       if (miniUser) miniUser.textContent = "@" + username;
-
       updateMood(freq);
     }
 
@@ -1171,26 +1168,11 @@
       }
     }
 
-    async function insertEcho(echo){
-      const res = await fetch(ECOS_API, {
-        method: "POST", headers: headers(), body: JSON.stringify(echo)
-      });
-      if(!res.ok) throw new Error(await res.text());
-      return await res.json();
-    }
-
-    async function updateEcho(id, patch){
-      const res = await fetch(ECOS_API + "?id=eq." + id, {
-        method: "PATCH", headers: headers(), body: JSON.stringify(patch)
-      });
-      if(!res.ok) throw new Error(await res.text());
-      return await res.json();
-    }
+    async function insertEcho(echo) { return await supaPost(ECOS_API, echo); }
+    async function updateEcho(id, patch) { return await supaPatch(ECOS_API + "?id=eq." + id, patch); }
 
     async function removeEcho(id){
-      const res = await fetch(ECOS_API + "?id=eq." + id, {
-        method: "DELETE", headers: headers({"Prefer":"return=minimal"})
-      });
+      const res = await fetch(ECOS_API + "?id=eq." + id, { method:"DELETE", headers:headers({"Prefer":"return=minimal"}) });
       if(!res.ok) throw new Error(await res.text());
     }
 
@@ -1199,9 +1181,7 @@
         profilesCache = await supaGet(PROFILES_API + "?select=*&order=created_at.desc");
         return profilesCache;
       } catch(err) {
-        console.error(err);
-        showToast("Erro", "Não consegui carregar presenças.");
-        return profilesCache || [];
+        console.error(err); showToast("Erro", "Não consegui carregar presenças."); return profilesCache || [];
       }
     }
 
@@ -1210,10 +1190,93 @@
         orbitsCache = await supaGet(ORBITS_API + "?select=*&order=created_at.desc");
         return orbitsCache;
       } catch(err) {
-        console.error(err);
-        showToast("Erro", "Não consegui carregar órbitas.");
-        return orbitsCache || [];
+        console.error(err); showToast("Erro", "Não consegui carregar órbitas."); return orbitsCache || [];
       }
+    }
+
+    async function getNotifications(){
+      if(!currentProfile || !currentProfile.id) return [];
+      try {
+        notificationsCache = await supaGet(NOTIFICATIONS_API + "?profile_id=eq." + currentProfile.id + "&select=*&order=created_at.desc");
+        return notificationsCache;
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui carregar notificações.");
+        return notificationsCache || [];
+      }
+    }
+
+    async function createNotification(profileId, type, title, message){
+      if(!profileId) return;
+      try {
+        await supaPost(NOTIFICATIONS_API, { profile_id: profileId, type, title, message, is_read:false });
+      } catch(err) {
+        console.error("notification error", err);
+      }
+    }
+
+    async function markNotificationRead(id){
+      try {
+        await supaPatch(NOTIFICATIONS_API + "?id=eq." + id, { is_read:true });
+        await renderNotifications();
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui marcar como lida.");
+      }
+    }
+
+    async function markAllNotificationsRead(){
+      if(!currentProfile || !currentProfile.id) return;
+      try {
+        await supaPatch(NOTIFICATIONS_API + "?profile_id=eq." + currentProfile.id, { is_read:true });
+        await renderNotifications();
+        showToast("Sinais lidos", "Todas as notificações foram marcadas como lidas.");
+      } catch(err) {
+        console.error(err);
+        showToast("Erro", "Não consegui marcar tudo como lido.");
+      }
+    }
+
+    async function renderNotifications(){
+      const list = document.getElementById("notificationsList");
+      const badgeSide = document.getElementById("notifBadgeSide");
+      if(!currentProfile || !currentProfile.id) {
+        if(list) list.innerHTML = `<div class="empty">Cria um perfil para receber sinais.</div>`;
+        if(badgeSide) badgeSide.textContent = "0";
+        return;
+      }
+
+      const notifs = await getNotifications();
+      const unread = notifs.filter(n => !n.is_read).length;
+
+      const statUnread = document.getElementById("statUnreadNotifications");
+      const statAll = document.getElementById("statAllNotifications");
+      const statSignals = document.getElementById("statEmotionalSignals");
+      if(statUnread) statUnread.textContent = unread;
+      if(statAll) statAll.textContent = notifs.length;
+      if(statSignals) statSignals.textContent = notifs.filter(n => n.type === "reaction" || n.type === "orbit").length;
+      if(badgeSide) badgeSide.textContent = unread;
+
+      if(!list) return;
+      list.innerHTML = "";
+      if(notifs.length === 0) {
+        list.innerHTML = `<div class="empty">Ainda não recebeste sinais emocionais.</div>`;
+        return;
+      }
+
+      notifs.forEach(n => {
+        const div = document.createElement("div");
+        div.className = "orbit-item";
+        div.style.opacity = n.is_read ? ".65" : "1";
+        div.innerHTML = `
+          <div>
+            <strong>${escapeHtml(n.title)}</strong>
+            <span>${escapeHtml(n.message)} · ${timeAgo(n.created_at)}</span>
+          </div>
+          ${n.is_read ? '<span class="tag">Lida</span>' : `<button class="btn primary" onclick="markNotificationRead('${n.id}')">Marcar lida</button>`}
+        `;
+        list.appendChild(div);
+      });
     }
 
     async function enterOrbit(profileId){
@@ -1222,23 +1285,12 @@
         switchView("profile");
         return;
       }
-      if(profileId === currentProfile.id){
-        showToast("Órbita impossível", "Não podes entrar na tua própria órbita.");
-        return;
-      }
+      if(profileId === currentProfile.id){ showToast("Órbita impossível", "Não podes entrar na tua própria órbita."); return; }
 
-      const payload = {
-        follower_profile_id: currentProfile.id,
-        followed_profile_id: profileId,
-        resonance_type: "Presença silenciosa"
-      };
+      const payload = { follower_profile_id: currentProfile.id, followed_profile_id: profileId, resonance_type:"Presença silenciosa" };
 
       try {
-        const res = await fetch(ORBITS_API, {
-          method: "POST",
-          headers: headers(),
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(ORBITS_API, { method:"POST", headers:headers(), body:JSON.stringify(payload) });
         if(!res.ok) {
           const msg = await res.text();
           if(msg.includes("duplicate") || msg.includes("unique")) {
@@ -1247,7 +1299,11 @@
           }
           throw new Error(msg);
         }
+        const followed = profilesCache.find(p => p.id === profileId);
+        await createNotification(profileId, "orbit", "Nova órbita", `${currentProfile.name || "Uma presença"} entrou na tua órbita.`);
+        await createNotification(currentProfile.id, "orbit", "Entraste numa órbita", `Agora estás ligado a ${followed ? followed.name : "uma presença"}.`);
         await renderOrbits();
+        await renderNotifications();
         showToast("Órbita criada", "Entraste na órbita desta presença.");
       } catch(err) {
         console.error(err);
@@ -1257,10 +1313,7 @@
 
     async function leaveOrbit(orbitId){
       try {
-        const res = await fetch(ORBITS_API + "?id=eq." + orbitId, {
-          method: "DELETE",
-          headers: headers({"Prefer":"return=minimal"})
-        });
+        const res = await fetch(ORBITS_API + "?id=eq." + orbitId, { method:"DELETE", headers:headers({"Prefer":"return=minimal"}) });
         if(!res.ok) throw new Error(await res.text());
         await renderOrbits();
         showToast("Órbita removida", "Saíste desta órbita.");
@@ -1282,12 +1335,10 @@
       const following = myId ? orbits.filter(o => o.follower_profile_id === myId) : [];
       const followers = myId ? orbits.filter(o => o.followed_profile_id === myId) : [];
 
-      const statFollowing = document.getElementById("statFollowing");
-      const statFollowers = document.getElementById("statFollowers");
-      const statProfiles = document.getElementById("statProfiles");
-      if(statFollowing) statFollowing.textContent = following.length;
-      if(statFollowers) statFollowers.textContent = followers.length;
-      if(statProfiles) statProfiles.textContent = profiles.length;
+      const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+      set("statFollowing", following.length);
+      set("statFollowers", followers.length);
+      set("statProfiles", profiles.length);
 
       profilesList.innerHTML = "";
       profiles.filter(p => !myId || p.id !== myId).forEach(p => {
@@ -1309,9 +1360,7 @@
         profilesList.appendChild(div);
       });
 
-      if(profilesList.innerHTML === "") {
-        profilesList.innerHTML = `<div class="empty">Ainda não existem outras presenças.</div>`;
-      }
+      if(profilesList.innerHTML === "") profilesList.innerHTML = `<div class="empty">Ainda não existem outras presenças.</div>`;
 
       myOrbitsList.innerHTML = "";
       following.forEach(o => {
@@ -1322,19 +1371,13 @@
         div.innerHTML = `
           <div class="person">
             <div class="avatar"><div>${escapeHtml(p.initials || "?")}</div></div>
-            <div>
-              <strong>${escapeHtml(p.name || "Presença")}</strong>
-              <span>${escapeHtml(o.resonance_type || "Presença silenciosa")}</span>
-            </div>
+            <div><strong>${escapeHtml(p.name || "Presença")}</strong><span>${escapeHtml(o.resonance_type || "Presença silenciosa")}</span></div>
           </div>
           <button class="btn danger" onclick="leaveOrbit('${o.id}')">Remover</button>
         `;
         myOrbitsList.appendChild(div);
       });
-
-      if(myOrbitsList.innerHTML === "") {
-        myOrbitsList.innerHTML = `<div class="empty">Ainda não entraste em nenhuma órbita.</div>`;
-      }
+      if(myOrbitsList.innerHTML === "") myOrbitsList.innerHTML = `<div class="empty">Ainda não entraste em nenhuma órbita.</div>`;
     }
 
     async function seedDemo(){
@@ -1342,25 +1385,19 @@
         {name:"Mara",username:"mara.presenca",initials:"M",dominant_frequency:"Inspiração",bio:"Crio para respirar melhor.",symbol:"✧",aura_color:"#FF4FD8"},
         {name:"Eco da Madrugada",username:"madrugada.eco",initials:"?",dominant_frequency:"Silêncio",bio:"Estou acordado quando o mundo dorme.",symbol:"☾",aura_color:"#39D8FF"}
       ];
-
       const demoEchoes = [
         {author:"Eco anónimo",initials:"?",mood:"Ansiedade",text:"Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.",aion_reply:"Não és um incómodo por precisares de espaço. Até o céu precisa de se abrir para deixar a tempestade passar.",reactions:{"Respirei contigo":0,"Estou contigo":0},anonymous:true,aion_only:false},
         {author:"Mara",initials:"M",mood:"Inspiração",text:"Hoje senti que ainda há uma parte de mim que quer criar.",aion_reply:"A criação é muitas vezes a alma a dizer: ainda estou aqui.",reactions:{"Senti-te":0,"Inspiras-me":0},anonymous:false,aion_only:false}
       ];
-
       try {
-        for(const p of demoProfiles) {
-          await fetch(PROFILES_API, {method:"POST",headers:headers(),body:JSON.stringify(p)});
-        }
+        for(const p of demoProfiles) await fetch(PROFILES_API, {method:"POST",headers:headers(),body:JSON.stringify(p)});
         for(const echo of demoEchoes) await insertEcho(echo);
-        await renderFeed();
-        await renderOrbits();
+        await renderFeed(); await renderOrbits();
         showToast("Demo criada", "Foram adicionados perfis e ecos demo.");
       } catch(err) {
         console.error(err);
         showToast("Demo parcial", "Alguns dados demo podem já existir.");
-        await renderFeed();
-        await renderOrbits();
+        await renderFeed(); await renderOrbits();
       }
     }
 
@@ -1374,31 +1411,23 @@
       const text = input.value.trim();
       const anonymous = document.getElementById("anonymousMode").checked;
       const aionOnly = document.getElementById("aionOnlyMode").checked;
-
-      if(!text){
-        showToast("Eco vazio", "Escreve primeiro o que queres deixar sair.");
-        return;
-      }
-
+      if(!text){ showToast("Eco vazio", "Escreve primeiro o que queres deixar sair."); return; }
       if(!currentProfile) await loadProfile();
       const p = currentProfile || {};
-
       const echo = {
         author: anonymous ? "Eco anónimo" : (p.name || "Pedro"),
         initials: anonymous ? "?" : (p.initials || "P"),
-        mood: selectedMood,
-        text,
+        mood: selectedMood, text,
         aion_reply: generateAionReply(text, selectedMood),
         reactions: {"Senti-te":0, "Estou contigo":0, "Abraço silencioso":0, "Respirei contigo":0},
-        anonymous,
-        aion_only: aionOnly
+        anonymous, aion_only: aionOnly
       };
-
       try {
         await insertEcho(echo);
+        await createNotification(currentProfile && currentProfile.id, "eco", "Eco publicado", "O teu Eco foi enviado para o feed emocional.");
         input.value = "";
         document.getElementById("aionOnlyMode").checked = false;
-        await renderFeed();
+        await renderFeed(); await renderNotifications();
         showToast("Eco enviado", "O teu Eco entrou no feed online.");
       } catch(err) {
         console.error(err);
@@ -1424,36 +1453,21 @@
       const feed = document.getElementById("feed");
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
       let echoes = await getEchoes();
-
       if(echoes.length === 0){
         feed.innerHTML = `<div class="empty">Ainda não há Ecos no feed online.<br>Publica o primeiro.</div>`;
-        updateStats(echoes);
-        return;
+        updateStats(echoes); return;
       }
-
       if(query){
-        echoes = echoes.filter(e =>
-          (e.text || "").toLowerCase().includes(query) ||
-          (e.mood || "").toLowerCase().includes(query) ||
-          (e.author || "").toLowerCase().includes(query)
-        );
+        echoes = echoes.filter(e => (e.text||"").toLowerCase().includes(query) || (e.mood||"").toLowerCase().includes(query) || (e.author||"").toLowerCase().includes(query));
       }
-
       feed.innerHTML = echoes.map(echo => {
         const reactions = Object.entries(echo.reactions || {}).map(([name,count]) =>
-          `<button class="reaction" onclick="reactEcho('${echo.id}','${escapeAttr(name)}')">${escapeHtml(name)} · ${count}</button>`
+          `<button class="reaction" onclick="reactEcho('${echo.id}','${escapeAttr(name)}','${escapeAttr(echo.author || "Presença")}')">${escapeHtml(name)} · ${count}</button>`
         ).join("");
-
         return `
           <article class="echo glass">
             <div class="echo-head">
-              <div class="person">
-                <div class="avatar"><div>${escapeHtml(echo.initials || "?")}</div></div>
-                <div>
-                  <strong>${escapeHtml(echo.author || "Presença Anónima")}</strong>
-                  <span>${timeAgo(echo.created_at)} ${echo.aion_only ? "· só para AION" : "· feed público"}</span>
-                </div>
-              </div>
+              <div class="person"><div class="avatar"><div>${escapeHtml(echo.initials || "?")}</div></div><div><strong>${escapeHtml(echo.author || "Presença Anónima")}</strong><span>${timeAgo(echo.created_at)} ${echo.aion_only ? "· só para AION" : "· feed público"}</span></div></div>
               <span class="tag">${escapeHtml(echo.mood || "Eco")}</span>
             </div>
             <p class="echo-text">${escapeHtml(echo.text || "")}</p>
@@ -1461,11 +1475,10 @@
             <div class="reactions">${reactions}<button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button></div>
           </article>`;
       }).join("");
-
       updateStats(await getEchoes());
     }
 
-    async function reactEcho(id, reaction){
+    async function reactEcho(id, reaction, authorName){
       const echoes = await getEchoes();
       const echo = echoes.find(e => e.id === id);
       if(!echo) return;
@@ -1473,40 +1486,29 @@
       reactions[reaction] = (reactions[reaction] || 0) + 1;
       try {
         await updateEcho(id, { reactions });
-        await renderFeed();
+        await createNotification(currentProfile && currentProfile.id, "reaction", "Reação enviada", `Enviaste “${reaction}” ao Eco de ${authorName}.`);
+        await renderFeed(); await renderNotifications();
         showToast("Presença enviada", `Reagiste com: ${reaction}.`);
       } catch(err) {
-        console.error(err);
-        showToast("Erro", "Não consegui atualizar a reação.");
+        console.error(err); showToast("Erro", "Não consegui atualizar a reação.");
       }
     }
 
     async function deleteEcho(id){
-      try {
-        await removeEcho(id);
-        await renderFeed();
-        showToast("Eco removido", "O Eco foi apagado.");
-      } catch(err) {
-        console.error(err);
-        showToast("Erro", "Não consegui remover o Eco.");
-      }
+      try { await removeEcho(id); await renderFeed(); showToast("Eco removido", "O Eco foi apagado."); }
+      catch(err) { console.error(err); showToast("Erro", "Não consegui remover o Eco."); }
     }
 
     function updateStats(echoes){
       const total = echoes.length;
       const reactions = echoes.reduce((sum,e) => sum + Object.values(e.reactions || {}).reduce((a,b)=>a+b,0), 0);
-      const statEchos = document.getElementById("statEchos");
-      const statReactions = document.getElementById("statReactions");
-      if(statEchos) statEchos.textContent = total;
-      if(statReactions) statReactions.textContent = reactions;
+      const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+      set("statEchos", total); set("statReactions", reactions);
     }
 
     function updateMood(mood){
       const label = mood === "Melancolia" ? "Melancolia Serena" : mood;
-      ["sidebarMood","auraMood","profileMood"].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.textContent = label;
-      });
+      ["sidebarMood","auraMood","profileMood"].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=label; });
     }
 
     document.querySelectorAll(".mood").forEach(btn => {
@@ -1521,12 +1523,13 @@
 
     function switchView(view){
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-      const map = {feed:"feedView",profile:"profileView",ecosferas:"ecosferasView",aion:"aionView",orbits:"orbitsView"};
+      const map = {feed:"feedView",profile:"profileView",ecosferas:"ecosferasView",aion:"aionView",orbits:"orbitsView",notifications:"notificationsView"};
       const target = document.getElementById(map[view]);
       if(target) target.classList.add("active");
       document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(`[data-view="${view}"]`).forEach(b => b.classList.add("active"));
       if(view === "orbits") renderOrbits();
+      if(view === "notifications") renderNotifications();
     }
 
     document.querySelectorAll("[data-view]").forEach(btn => {
@@ -1579,23 +1582,16 @@
       return `há ${days} d`;
     }
 
-    function escapeHtml(str){
-      return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-
-    function escapeAttr(str){
-      return String(str).replaceAll("'","&#039;").replaceAll('"',"&quot;");
-    }
+    function escapeHtml(str){ return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+    function escapeAttr(str){ return String(str).replaceAll("'","&#039;").replaceAll('"',"&quot;"); }
 
     appendChat("fullChat", "Eu sou a presença AION. Diz-me o que se move dentro de ti.", "ai");
-    loadProfile().then(() => renderOrbits());
+    loadProfile().then(() => { renderOrbits(); renderNotifications(); });
     renderFeed();
     updateMood("Melancolia");
 
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("service-worker.js");
-      });
+      window.addEventListener("load", () => { navigator.serviceWorker.register("service-worker.js"); });
     }
   </script>
 </body>
