@@ -1,264 +1,1311 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AION Presence v1.1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AION Presence — App Social Emocional</title>
+  <meta name="description" content="Protótipo funcional da rede social emocional AION Presence."/>
+  <meta name="theme-color" content="#05030A"/>
+  <link rel="manifest" href="manifest.json"/>
+
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap');
+
+    :root{
+      --bg:#05030A;
+      --panel:#0B0715;
+      --panel2:rgba(255,255,255,.055);
+      --line:rgba(255,255,255,.10);
+      --text:#F8F5FF;
+      --muted:#A9A1BA;
+      --cyan:#39D8FF;
+      --violet:#8B5CF6;
+      --pink:#FF4FD8;
+      --green:#52F2B3;
+      --amber:#FFD37A;
+      --danger:#FF6B8A;
+      --radius:24px;
+      --shadow:0 24px 80px rgba(0,0,0,.45);
+    }
+
+    *{box-sizing:border-box}
     body{
+      margin:0;
       min-height:100vh;
-      font-family:Inter,Arial,sans-serif;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at top left,rgba(111,76,255,.35),transparent 35%),
-        radial-gradient(circle at bottom right,rgba(0,229,255,.22),transparent 35%),
-        #050510;
+        radial-gradient(circle at 15% 8%,rgba(57,216,255,.17),transparent 34rem),
+        radial-gradient(circle at 90% 12%,rgba(255,79,216,.13),transparent 32rem),
+        radial-gradient(circle at 50% 70%,rgba(139,92,246,.12),transparent 40rem),
+        linear-gradient(180deg,#05030A,#030207);
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.05;
+      background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+      background-size:52px 52px;
+      z-index:0;
+    }
+
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit;text-decoration:none}
+
+    .app{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:280px minmax(0,1fr) 350px;
+      gap:18px;
+      width:min(1500px,calc(100% - 28px));
+      margin:0 auto;
+      padding:18px 0;
+      min-height:100vh;
+    }
+
+    .glass{
+      border:1px solid var(--line);
+      background:rgba(10,7,21,.72);
+      backdrop-filter:blur(24px);
+      box-shadow:var(--shadow);
+    }
+
+    .sidebar{
+      position:sticky;
+      top:18px;
+      height:calc(100vh - 36px);
+      border-radius:30px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      overflow:hidden;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding-bottom:16px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .logo{
+      width:46px;height:46px;border-radius:999px;
+      background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(135deg,var(--cyan),var(--violet),var(--pink)) border-box;
+      border:1px solid transparent;
+      display:grid;place-items:center;
+      box-shadow:0 0 32px rgba(139,92,246,.34);
+    }
+
+    .logo span{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.18em;
+      background:linear-gradient(90deg,var(--cyan),#fff,var(--pink));
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+
+    .brand strong{
+      display:block;
+      font-size:13px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    .brand small{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      margin-top:3px;
+    }
+
+    .nav{
+      display:grid;
+      gap:8px;
+    }
+
+    .nav button{
+      width:100%;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:11px;
+      padding:13px 12px;
+      border-radius:17px;
+      text-align:left;
+      transition:.18s ease;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .nav button:hover,.nav button.active{
+      border-color:rgba(57,216,255,.22);
+      background:rgba(57,216,255,.075);
       color:#fff;
     }
-    .wrap{max-width:1180px;margin:auto;padding:28px}
-    header{
-      display:flex;justify-content:space-between;align-items:center;gap:16px;
-      padding:20px 0 32px;
+
+    .nav .ico{
+      width:26px;
+      height:26px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.06);
+      font-size:14px;
     }
-    .logo{font-size:32px;font-weight:900;letter-spacing:-1px}
-    .pill{
-      padding:10px 16px;border-radius:999px;
-      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
-      color:#dfe5ff;
+
+    .mini-profile{
+      margin-top:auto;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:24px;
+      padding:16px;
     }
-    .hero{
-      padding:34px;border-radius:30px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.13);
-      box-shadow:0 0 70px rgba(120,90,255,.22);
-      margin-bottom:22px;
-    }
-    h1{font-size:clamp(38px,7vw,76px);letter-spacing:-3px;margin-bottom:12px}
-    .sub{font-size:20px;color:#d8ddff;line-height:1.5;max-width:760px}
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px;margin-top:22px}
-    .card{
-      padding:24px;border-radius:26px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
-    }
-    h2{font-size:26px;margin-bottom:14px}
-    textarea,input,select{
-      width:100%;padding:14px;border:0;outline:0;border-radius:16px;
-      background:rgba(255,255,255,.1);color:white;font-size:16px;margin-bottom:12px;
-    }
-    textarea{min-height:115px;resize:vertical}
-    option{color:#111}
-    button{
-      border:0;padding:13px 18px;border-radius:999px;cursor:pointer;
-      background:linear-gradient(135deg,#8b5cff,#00e5ff,#ff4fd8);
-      color:white;font-weight:900;margin:4px 4px 4px 0;
-    }
-    .eco{
-      padding:18px;border-radius:20px;
-      background:rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.09);
+
+    .user-row{
+      display:flex;
+      align-items:center;
+      gap:11px;
       margin-bottom:14px;
     }
-    .ecoTop{display:flex;justify-content:space-between;gap:12px;color:#9eefff;font-size:14px;margin-bottom:8px}
-    .ecoText{font-size:18px;line-height:1.45;color:#f3f5ff;margin-bottom:12px}
-    .reacts{display:flex;flex-wrap:wrap;gap:8px}
-    .react{
-      padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.09);
-      border:1px solid rgba(255,255,255,.1);font-size:14px;cursor:pointer;
+
+    .avatar{
+      width:42px;height:42px;border-radius:999px;
+      background:linear-gradient(135deg,var(--cyan),var(--violet),var(--pink));
+      padding:1px;
+      flex:0 0 auto;
     }
-    .aion{
-      margin-top:12px;padding:13px;border-radius:16px;
-      background:rgba(139,92,255,.16);
-      border:1px solid rgba(139,92,255,.25);
-      color:#e9e8ff;font-style:italic;
+
+    .avatar div{
+      width:100%;height:100%;border-radius:inherit;
+      background:#090512;
+      display:grid;place-items:center;
+      font-weight:900;
+      font-size:14px;
     }
-    .spheres{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+
+    .user-row strong{display:block;font-size:14px}
+    .user-row span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+
+    .soul-status{
+      border-top:1px solid var(--line);
+      padding-top:13px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .soul-status strong{color:#fff}
+
+    .main{
+      min-width:0;
+      display:grid;
+      gap:18px;
+      align-content:start;
+    }
+
+    .topbar{
+      position:sticky;
+      top:18px;
+      z-index:10;
+      border-radius:28px;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .search{
+      flex:1;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.055);
+      color:#fff;
+      outline:none;
+      border-radius:999px;
+      padding:13px 16px;
+      min-width:0;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border-radius:999px;
+      padding:12px 16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:800;
+      font-size:13px;
+      transition:.18s ease;
+      white-space:nowrap;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,255,255,.23);
+      background:rgba(255,255,255,.10);
+    }
+
+    .btn.primary{
+      border:0;
+      background:linear-gradient(135deg,var(--cyan),var(--violet),var(--pink));
+      box-shadow:0 16px 45px rgba(139,92,246,.32);
+    }
+
+    .btn.danger{
+      border-color:rgba(255,107,138,.25);
+      color:#ffd7df;
+      background:rgba(255,107,138,.08);
+    }
+
+    .composer{
+      border-radius:30px;
+      padding:18px;
+    }
+
+    .composer-head{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .composer textarea{
+      width:100%;
+      min-height:98px;
+      resize:vertical;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      color:#fff;
+      outline:none;
+      padding:16px;
+      line-height:1.6;
+    }
+
+    .composer textarea:focus,.search:focus,.field:focus{
+      border-color:rgba(57,216,255,.35);
+    }
+
+    .moods{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:14px 0;
+    }
+
+    .mood{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      color:#d9d1eb;
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:700;
+      transition:.18s ease;
+    }
+
+    .mood.active,.mood:hover{
+      border-color:rgba(57,216,255,.35);
+      background:rgba(57,216,255,.10);
+      color:#e6fbff;
+    }
+
+    .composer-actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .switches{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .switches label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .feed{
+      display:grid;
+      gap:14px;
+    }
+
+    .empty{
+      border:1px dashed rgba(255,255,255,.16);
+      background:rgba(255,255,255,.035);
+      border-radius:28px;
+      padding:32px;
+      text-align:center;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .echo{
+      border-radius:30px;
+      padding:18px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .echo::before{
+      content:"";
+      position:absolute;
+      inset:-80px auto auto -80px;
+      width:230px;height:230px;
+      border-radius:999px;
+      filter:blur(65px);
+      opacity:.11;
+      background:var(--cyan);
+    }
+
+    .echo-head{
+      position:relative;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:14px;
+    }
+
+    .person{
+      display:flex;
+      gap:11px;
+      align-items:center;
+    }
+
+    .person strong{display:block;font-size:14px}
+    .person span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+
+    .tag{
+      border:1px solid rgba(57,216,255,.22);
+      background:rgba(57,216,255,.08);
+      color:#d8faff;
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:10px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .echo-text{
+      position:relative;
+      color:#f1ecff;
+      font-size:15px;
+      line-height:1.75;
+      margin:0 0 15px;
+      white-space:pre-wrap;
+    }
+
+    .aion-reply{
+      position:relative;
+      border:1px solid rgba(139,92,246,.22);
+      background:rgba(139,92,246,.08);
+      border-radius:20px;
+      padding:14px;
+      color:#ded5ff;
+      line-height:1.55;
+      font-size:13px;
+      margin-bottom:14px;
+    }
+
+    .aion-reply strong{color:#fff}
+
+    .reactions{
+      position:relative;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .reaction{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      color:#d8d0ea;
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:700;
+      transition:.18s ease;
+    }
+
+    .reaction:hover{
+      border-color:rgba(255,255,255,.23);
+      background:rgba(255,255,255,.085);
+    }
+
+    .rightbar{
+      position:sticky;
+      top:18px;
+      height:calc(100vh - 36px);
+      display:grid;
+      gap:18px;
+      align-content:start;
+      overflow:auto;
+      padding-right:2px;
+    }
+
+    .card{
+      border-radius:30px;
+      padding:18px;
+    }
+
+    .card h3{
+      margin:0 0 14px;
+      font-size:20px;
+      letter-spacing:-.04em;
+    }
+
+    .aura{
+      height:190px;
+      border-radius:26px;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(circle at 50% 40%,rgba(255,255,255,.9) 0 4%,rgba(57,216,255,.65) 6% 16%,rgba(139,92,246,.45) 28% 50%,rgba(255,79,216,.16) 62%,transparent 73%),
+        rgba(255,255,255,.04);
+      display:grid;
+      place-items:end center;
+      text-align:center;
+      padding:18px;
+      box-shadow:inset 0 0 80px rgba(57,216,255,.08);
+      animation:breathe 5s ease-in-out infinite;
+    }
+
+    @keyframes breathe{
+      0%,100%{filter:saturate(.9) brightness(.9)}
+      50%{filter:saturate(1.25) brightness(1.15)}
+    }
+
+    .aura small{
+      display:block;
+      color:var(--cyan);
+      font-size:10px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .aura strong{
+      font-family:"Playfair Display",serif;
+      font-size:25px;
+      font-weight:500;
+    }
+
+    .sphere-list{
+      display:grid;
+      gap:9px;
+    }
+
     .sphere{
-      padding:14px;border-radius:18px;background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.1);cursor:pointer;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:13px;
+      transition:.18s ease;
     }
-    .sphere.active{outline:2px solid #00e5ff}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-    .stat{padding:14px;border-radius:18px;background:rgba(255,255,255,.08);text-align:center}
-    .stat strong{display:block;font-size:24px}
-    .empty{color:#bfc7ff;text-align:center;padding:28px}
-    @media(max-width:850px){.grid{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}.spheres{grid-template-columns:1fr}.stats{grid-template-columns:1fr}}
+
+    .sphere:hover,.sphere.active{
+      border-color:rgba(255,79,216,.28);
+      background:rgba(255,79,216,.08);
+    }
+
+    .sphere strong{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size:13px;
+    }
+
+    .sphere span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
+      margin-top:5px;
+    }
+
+    .chat{
+      display:grid;
+      gap:10px;
+      max-height:310px;
+      overflow:auto;
+      padding-right:2px;
+    }
+
+    .bubble{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      border-radius:18px;
+      padding:11px;
+      line-height:1.5;
+      font-size:13px;
+      color:#e8e2f8;
+    }
+
+    .bubble.user{
+      margin-left:36px;
+      background:rgba(57,216,255,.08);
+    }
+
+    .bubble.ai{
+      margin-right:36px;
+      background:rgba(139,92,246,.08);
+    }
+
+    .chat-input{
+      display:flex;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .field{
+      width:100%;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      outline:none;
+      border-radius:16px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .profile-view,.ecosferas-view,.orbits-view{
+      display:none;
+      border-radius:30px;
+      padding:22px;
+    }
+
+    .view.active{display:block}
+
+    .profile-grid{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .soul-avatar{
+      width:160px;
+      height:160px;
+      border-radius:45px;
+      margin:0 auto 18px;
+      background:
+        radial-gradient(circle at 34% 25%,#fff 0 4%,transparent 5%),
+        radial-gradient(circle at center,rgba(57,216,255,.82),rgba(139,92,246,.55),rgba(255,79,216,.28),transparent 70%);
+      box-shadow:0 0 70px rgba(139,92,246,.36);
+    }
+
+    .profile-view h2,.ecosferas-view h2,.orbits-view h2{
+      margin:0 0 12px;
+      font-size:42px;
+      letter-spacing:-.055em;
+      line-height:1;
+    }
+
+    .profile-view p,.ecosferas-view p,.orbits-view p{
+      color:var(--muted);
+      line-height:1.65;
+      margin:0 0 18px;
+    }
+
+    .profile-stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin:18px 0;
+    }
+
+    .stat{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:20px;
+      padding:16px;
+      text-align:center;
+    }
+
+    .stat strong{display:block;font-size:25px}
+    .stat span{display:block;color:var(--muted);font-size:11px;margin-top:6px}
+
+    .ecosfera-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .ecosfera-card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:24px;
+      padding:20px;
+      min-height:150px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .ecosfera-card::after{
+      content:"";
+      position:absolute;
+      right:-60px;bottom:-80px;
+      width:190px;height:190px;
+      border-radius:999px;
+      filter:blur(50px);
+      background:var(--violet);
+      opacity:.13;
+    }
+
+    .ecosfera-card:nth-child(2)::after{background:var(--pink)}
+    .ecosfera-card:nth-child(3)::after{background:var(--cyan)}
+    .ecosfera-card:nth-child(4)::after{background:var(--amber)}
+    .ecosfera-card:nth-child(5)::after{background:var(--green)}
+    .ecosfera-card:nth-child(6)::after{background:#fff;opacity:.08}
+
+    .ecosfera-card strong{
+      position:relative;
+      display:block;
+      font-size:20px;
+      margin-bottom:10px;
+    }
+
+    .ecosfera-card span{
+      position:relative;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:13px;
+    }
+
+    .orbits-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .orbit-item{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:22px;
+      padding:15px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .toast{
+      position:fixed;
+      right:22px;
+      bottom:22px;
+      width:min(380px,calc(100% - 44px));
+      z-index:50;
+      border:1px solid var(--line);
+      background:rgba(8,5,18,.86);
+      backdrop-filter:blur(22px);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      transform:translateY(30px);
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+    }
+
+    .toast.show{
+      transform:translateY(0);
+      opacity:1;
+    }
+
+    .toast strong{display:block;margin-bottom:4px}
+    .toast span{display:block;color:var(--muted);font-size:13px;line-height:1.5}
+
+    .mobile-bottom{
+      display:none;
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:30;
+      border:1px solid var(--line);
+      background:rgba(8,5,18,.86);
+      backdrop-filter:blur(22px);
+      border-radius:24px;
+      padding:8px;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      box-shadow:var(--shadow);
+    }
+
+    .mobile-bottom button{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      border-radius:17px;
+      padding:10px 4px;
+      font-size:18px;
+    }
+
+    .mobile-bottom button.active{
+      background:rgba(57,216,255,.10);
+      color:#fff;
+    }
+
+    @media(max-width:1180px){
+      .app{grid-template-columns:250px minmax(0,1fr)}
+      .rightbar{display:none}
+    }
+
+    @media(max-width:820px){
+      .app{
+        width:min(100% - 22px,760px);
+        display:block;
+        padding:12px 0 88px;
+      }
+      .sidebar{display:none}
+      .topbar{
+        top:10px;
+        margin-bottom:12px;
+        border-radius:24px;
+      }
+      .topbar .btn:not(.primary){display:none}
+      .composer,.echo,.profile-view,.ecosferas-view,.orbits-view{border-radius:24px}
+      .profile-grid{grid-template-columns:1fr}
+      .profile-stats{grid-template-columns:1fr}
+      .ecosfera-grid{grid-template-columns:1fr}
+      .mobile-bottom{display:grid}
+    }
   </style>
 </head>
+
 <body>
-<div class="wrap">
-  <header>
-    <div class="logo">AION Presence</div>
-    <div class="pill">Rede emocional sem likes, sem pressão, sem máscaras.</div>
-  </header>
-
-  <section class="hero">
-    <h1>Entra pelo que sentes.</h1>
-    <p class="sub">Partilha um Eco numa ecosfera. Não procuras aprovação. Procuras presença. O AION responde apenas quando o silêncio precisa de companhia.</p>
-  </section>
-
-  <div class="grid">
-    <main class="card">
-      <h2>Feed de Ecos</h2>
-
-      <input id="nameInput" placeholder="O teu nome ou presença anónima" />
-      <select id="sphereInput">
-        <option>Madrugada</option>
-        <option>Corações Partidos</option>
-        <option>Ansiedade</option>
-        <option>Silêncio</option>
-        <option>Inspiração</option>
-        <option>Recomeçar</option>
-      </select>
-      <textarea id="ecoInput" placeholder="Escreve aquilo que não precisa de likes..."></textarea>
-      <button onclick="publishEco()">PUBLICAR ECO</button>
-
-      <div class="stats">
-        <div class="stat"><strong id="ecoCount">0</strong>Ecos</div>
-        <div class="stat"><strong id="presenceCount">0</strong>Presenças</div>
-        <div class="stat"><strong id="aionCount">0</strong>Respostas AION</div>
+  <div class="app">
+    <aside class="sidebar glass">
+      <div class="brand">
+        <div class="logo"><span>AION</span></div>
+        <div>
+          <strong>AION Presence</strong>
+          <small>Rede emocional v1</small>
+        </div>
       </div>
 
-      <br>
-      <div id="feed"></div>
+      <nav class="nav">
+        <button class="active" data-view="feed"><span class="ico">✦</span> Presença</button>
+        <button data-view="ecosferas"><span class="ico">◌</span> Ecosferas</button>
+        <button data-view="aion"><span class="ico">◈</span> AION</button>
+        <button data-view="orbits"><span class="ico">∞</span> Órbitas</button>
+        <button data-view="profile"><span class="ico">☾</span> Perfil de Alma</button>
+      </nav>
+
+      <div class="mini-profile">
+        <div class="user-row">
+          <div class="avatar"><div>P</div></div>
+          <div>
+            <strong>Pedro</strong>
+            <span>@presenca.pedro</span>
+          </div>
+        </div>
+        <div class="soul-status">
+          Frequência atual:<br>
+          <strong id="sidebarMood">Melancolia Serena</strong>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar glass">
+        <input class="search" id="searchInput" placeholder="Procurar ecos, estados ou palavras..." oninput="renderFeed()"/>
+        <button class="btn" onclick="seedDemo()">Gerar ecos demo</button>
+        <button class="btn primary" onclick="focusComposer()">Enviar Eco</button>
+      </div>
+
+      <section id="feedView" class="view active">
+        <div class="composer glass" id="composer">
+          <div class="composer-head">
+            <div class="avatar"><div>P</div></div>
+            <textarea id="echoText" placeholder="Como estás por dentro hoje? Escreve um Eco..."></textarea>
+          </div>
+
+          <div class="moods" id="moodButtons">
+            <button class="mood active" data-mood="Serenidade">Serenidade</button>
+            <button class="mood" data-mood="Ansiedade">Ansiedade</button>
+            <button class="mood" data-mood="Melancolia">Melancolia</button>
+            <button class="mood" data-mood="Inspiração">Inspiração</button>
+            <button class="mood" data-mood="Amor">Amor</button>
+            <button class="mood" data-mood="Silêncio">Silêncio</button>
+            <button class="mood" data-mood="Recomeço">Recomeço</button>
+          </div>
+
+          <div class="composer-actions">
+            <div class="switches">
+              <label><input type="checkbox" id="anonymousMode"> Anónimo</label>
+              <label><input type="checkbox" id="aionOnlyMode"> Só para AION</label>
+            </div>
+            <button class="btn primary" onclick="publishEcho()">Enviar Eco</button>
+          </div>
+        </div>
+
+        <div class="feed" id="feed"></div>
+      </section>
+
+      <section id="profileView" class="profile-view glass view">
+        <div class="profile-grid">
+          <div>
+            <div class="soul-avatar"></div>
+            <div class="profile-stats">
+              <div class="stat"><strong id="statEchos">0</strong><span>Ecos</span></div>
+              <div class="stat"><strong id="statReactions">0</strong><span>Presenças</span></div>
+              <div class="stat"><strong>7</strong><span>Órbitas</span></div>
+            </div>
+          </div>
+          <div>
+            <h2>Perfil de Alma</h2>
+            <p>Este perfil não foi criado para impressionar. Foi criado para mostrar presença.</p>
+            <div class="ecosfera-card">
+              <strong>Pedro</strong>
+              <span>
+                Frequência dominante: <b id="profileMood">Melancolia Serena</b><br>
+                Modo atual: disponível para escutar<br>
+                Frase de alma: “Há silêncios que também abraçam.”
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="ecosferasView" class="ecosferas-view glass view">
+        <h2>Ecosferas</h2>
+        <p>Comunidades emocionais onde cada pessoa entra pelo que sente, não pelo que mostra.</p>
+
+        <div class="ecosfera-grid">
+          <div class="ecosfera-card"><strong>Sala da Madrugada</strong><span>Para quem pensa demais quando o mundo dorme.</span></div>
+          <div class="ecosfera-card"><strong>Corações Partidos</strong><span>Presença para quem ainda ama, perdeu ou tenta recomeçar.</span></div>
+          <div class="ecosfera-card"><strong>Ansiedade</strong><span>Respiração, descompressão e mensagens que desaceleram.</span></div>
+          <div class="ecosfera-card"><strong>Silêncio</strong><span>Um lugar onde não é obrigatório falar para pertencer.</span></div>
+          <div class="ecosfera-card"><strong>Inspiração</strong><span>Frases, arte, livros, música e impulsos criativos.</span></div>
+          <div class="ecosfera-card"><strong>Recomeçar</strong><span>Para quem fechou um ciclo e ainda procura chão.</span></div>
+        </div>
+      </section>
+
+      <section id="aionView" class="ecosferas-view glass view">
+        <h2>AION Companion</h2>
+        <p>A presença artificial da rede. Não substitui pessoas. Ajuda a atravessar silêncios.</p>
+        <div class="chat" id="fullChat"></div>
+        <div class="chat-input">
+          <input class="field" id="fullChatInput" placeholder="Fala com a AION..." onkeydown="if(event.key==='Enter') sendFullChat()"/>
+          <button class="btn primary" onclick="sendFullChat()">Enviar</button>
+        </div>
+      </section>
+
+      <section id="orbitsView" class="orbits-view glass view">
+        <h2>Órbitas</h2>
+        <p>Em vez de seguidores, presenças com quem criaste ressonância.</p>
+        <div class="orbits-list">
+          <div class="orbit-item"><div class="person"><div class="avatar"><div>F</div></div><div><strong>Fran</strong><span>Ressonância: amor sereno</span></div></div><button class="btn">Enviar sinal</button></div>
+          <div class="orbit-item"><div class="person"><div class="avatar"><div>R</div></div><div><strong>Ricci</strong><span>Ressonância: amizade luminosa</span></div></div><button class="btn">Enviar sinal</button></div>
+          <div class="orbit-item"><div class="person"><div class="avatar"><div>?</div></div><div><strong>Eco anónimo</strong><span>Ressonância: madrugada</span></div></div><button class="btn">Enviar sinal</button></div>
+        </div>
+      </section>
     </main>
 
-    <aside class="card">
-      <h2>Ecosferas</h2>
-      <div class="spheres" id="spheres"></div>
-      <br>
-      <h2>AION Companion</h2>
-      <p id="companionText">Estou aqui. Não para julgar. Apenas para escutar o que ficou entre linhas.</p>
-      <br>
-      <button onclick="seedDemo()">GERAR ECOS DEMO</button>
-      <button onclick="clearAll()">LIMPAR</button>
+    <aside class="rightbar">
+      <section class="card glass">
+        <h3>Frequência atual</h3>
+        <div class="aura">
+          <div>
+            <small>Estado dominante</small>
+            <strong id="auraMood">Melancolia Serena</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card glass">
+        <h3>Ecosferas vivas</h3>
+        <div class="sphere-list">
+          <div class="sphere active"><strong>Madrugada <span>128</span></strong><span>“Não consigo dormir.”</span></div>
+          <div class="sphere"><strong>Corações Partidos <span>94</span></strong><span>“Ainda sinto.”</span></div>
+          <div class="sphere"><strong>Ansiedade <span>76</span></strong><span>“Respira comigo.”</span></div>
+          <div class="sphere"><strong>Inspiração <span>51</span></strong><span>“Hoje nasceu uma ideia.”</span></div>
+        </div>
+      </section>
+
+      <section class="card glass">
+        <h3>AION escuta</h3>
+        <div class="chat" id="sideChat">
+          <div class="bubble ai">Eu não estou aqui para te apressar. Estou aqui para te ajudar a ouvir o que já existe dentro de ti.</div>
+        </div>
+        <div class="chat-input">
+          <input class="field" id="sideChatInput" placeholder="Pergunta à AION..." onkeydown="if(event.key==='Enter') sendSideChat()"/>
+          <button class="btn primary" onclick="sendSideChat()">➜</button>
+        </div>
+      </section>
     </aside>
   </div>
-</div>
 
-<script>
-const spheres = ["Todos","Madrugada","Corações Partidos","Ansiedade","Silêncio","Inspiração","Recomeçar"];
-let activeSphere = "Todos";
+  <nav class="mobile-bottom">
+    <button class="active" data-view="feed">✦</button>
+    <button data-view="ecosferas">◌</button>
+    <button data-view="aion">◈</button>
+    <button data-view="orbits">∞</button>
+    <button data-view="profile">☾</button>
+  </nav>
 
-function loadEcos(){
-  return JSON.parse(localStorage.getItem("aionEcos") || "[]");
-}
-function saveEcos(ecos){
-  localStorage.setItem("aionEcos", JSON.stringify(ecos));
-}
-function aionReply(text, sphere){
-  const t = text.toLowerCase();
-  if(sphere === "Ansiedade" || t.includes("ansiedade") || t.includes("medo")) return "Respira. Nem tudo precisa de ser resolvido hoje.";
-  if(sphere === "Corações Partidos" || t.includes("saudade") || t.includes("dor")) return "A dor não prova fraqueza. Prova que algo foi real dentro de ti.";
-  if(sphere === "Madrugada") return "A madrugada aumenta tudo. Mas também passa.";
-  if(sphere === "Recomeçar") return "Recomeçar não apaga o passado. Dá-lhe outro destino.";
-  if(sphere === "Silêncio") return "Nem todo o silêncio é vazio. Alguns silêncios estão a proteger-te.";
-  if(sphere === "Inspiração") return "Guarda essa centelha. Ela pode tornar-se caminho.";
-  return "Estou contigo neste eco.";
-}
-function publishEco(){
-  const text = ecoInput.value.trim();
-  if(!text) return alert("Escreve primeiro um Eco.");
-  const name = nameInput.value.trim() || "Presença Anónima";
-  const sphere = sphereInput.value;
-  const ecos = loadEcos();
-  ecos.unshift({
-    id: Date.now(),
-    name, sphere, text,
-    time: new Date().toLocaleString("pt-PT"),
-    reactions:{compreendo:0, contigo:0, abraco:0, recomeco:0},
-    aion: aionReply(text, sphere)
-  });
-  saveEcos(ecos);
-  ecoInput.value = "";
-  render();
-}
-function react(id, type){
-  const ecos = loadEcos();
-  const eco = ecos.find(e => e.id === id);
-  if(!eco) return;
-  eco.reactions[type]++;
-  saveEcos(ecos);
-  render();
-}
-function renderSpheres(){
-  spheresEl = document.getElementById("spheres");
-  spheresEl.innerHTML = "";
-  spheres.forEach(s=>{
-    const div = document.createElement("div");
-    div.className = "sphere" + (activeSphere === s ? " active" : "");
-    div.innerHTML = `<strong>${s}</strong>`;
-    div.onclick = ()=>{activeSphere=s;render()};
-    spheresEl.appendChild(div);
-  });
-}
-function render(){
-  renderSpheres();
-  const ecos = loadEcos();
-  const filtered = activeSphere === "Todos" ? ecos : ecos.filter(e=>e.sphere === activeSphere);
-  ecoCount.innerText = ecos.length;
-  presenceCount.innerText = new Set(ecos.map(e=>e.name)).size;
-  aionCount.innerText = ecos.filter(e=>e.aion).length;
+  <div class="toast" id="toast">
+    <strong id="toastTitle">AION</strong>
+    <span id="toastText">Mensagem</span>
+  </div>
 
-  companionText.innerText = activeSphere === "Todos"
-    ? "Escolhe uma ecosfera ou escreve um Eco. Eu respondo quando sentir que há silêncio."
-    : `Estás na ecosfera ${activeSphere}. Aqui, o que sentes tem lugar.`;
+  <script>
+    const STORAGE_KEY = "aion_presence_echoes_v1";
+    let selectedMood = "Serenidade";
 
-  feed.innerHTML = "";
-  if(filtered.length === 0){
-    feed.innerHTML = `<div class="empty">Ainda não existem Ecos nesta ecosfera.</div>`;
-    return;
-  }
-  filtered.forEach(e=>{
-    const div = document.createElement("div");
-    div.className = "eco";
-    div.innerHTML = `
-      <div class="ecoTop"><span>${e.sphere} · ${e.name}</span><span>${e.time}</span></div>
-      <div class="ecoText">${escapeHtml(e.text)}</div>
-      <div class="reacts">
-        <span class="react" onclick="react(${e.id},'compreendo')">✨ Compreendo ${e.reactions.compreendo}</span>
-        <span class="react" onclick="react(${e.id},'contigo')">🌙 Estou contigo ${e.reactions.contigo}</span>
-        <span class="react" onclick="react(${e.id},'abraco')">💙 Abraço silencioso ${e.reactions.abraco}</span>
-        <span class="react" onclick="react(${e.id},'recomeco')">🌱 Também recomeço ${e.reactions.recomeco}</span>
-      </div>
-      <div class="aion">AION: ${e.aion}</div>
-    `;
-    feed.appendChild(div);
-  });
-}
-function seedDemo(){
-  const demo = [
-    ["Madrugada","São 03:17 e não consigo dormir."],
-    ["Corações Partidos","Hoje doeu menos do que ontem."],
-    ["Ansiedade","Tenho medo de não conseguir dar conta de tudo."],
-    ["Silêncio","Há coisas que eu queria dizer, mas não encontro forma."],
-    ["Inspiração","Hoje tive uma pequena ideia e senti vontade de continuar."],
-    ["Recomeçar","Enviei o currículo. Parece pouco, mas para mim foi muito."]
-  ];
-  const ecos = loadEcos();
-  demo.reverse().forEach(([sphere,text])=>{
-    ecos.unshift({
-      id: Date.now()+Math.random(),
-      name:"Presença Demo",
-      sphere,text,
-      time:new Date().toLocaleString("pt-PT"),
-      reactions:{compreendo:0, contigo:0, abraco:0, recomeco:0},
-      aion:aionReply(text,sphere)
+    const demoEchoes = [
+      {
+        id: crypto.randomUUID(),
+        author: "Pedro",
+        initials: "P",
+        mood: "Melancolia",
+        text: "Hoje acordei com saudade de uma versão minha que já não existe. Talvez crescer seja também despedirmo-nos em silêncio.",
+        aion: "Há versões nossas que não desaparecem. Só passam a viver dentro da memória que nos protege.",
+        reactions: {"Senti-te": 24, "Estou contigo": 11, "Abraço silencioso": 8, "Respirei contigo": 4},
+        createdAt: Date.now() - 1000 * 60 * 8,
+        anonymous: false,
+        aionOnly: false
+      },
+      {
+        id: crypto.randomUUID(),
+        author: "Eco anónimo",
+        initials: "?",
+        mood: "Ansiedade",
+        text: "Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.",
+        aion: "Não és um incómodo por precisares de espaço. Até o céu precisa de se abrir para deixar a tempestade passar.",
+        reactions: {"Respirei contigo": 31, "Também passei por isso": 19, "Estou contigo": 15},
+        createdAt: Date.now() - 1000 * 60 * 26,
+        anonymous: true,
+        aionOnly: false
+      },
+      {
+        id: crypto.randomUUID(),
+        author: "Mara",
+        initials: "M",
+        mood: "Inspiração",
+        text: "Hoje senti que ainda há uma parte de mim que quer criar, mesmo depois de tanto cansaço.",
+        aion: "A criação é muitas vezes a alma a dizer: ainda estou aqui.",
+        reactions: {"Senti-te": 12, "Inspiras-me": 9, "Estou contigo": 6},
+        createdAt: Date.now() - 1000 * 60 * 58,
+        anonymous: false,
+        aionOnly: false
+      }
+    ];
+
+    function getEchoes(){
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    }
+
+    function saveEchoes(echoes){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(echoes));
+    }
+
+    function seedDemo(){
+      const existing = getEchoes();
+      saveEchoes([...demoEchoes, ...existing]);
+      renderFeed();
+      showToast("Ecos criados", "Foram adicionados exemplos ao feed emocional.");
+    }
+
+    function focusComposer(){
+      document.getElementById("echoText").focus();
+      document.getElementById("composer").scrollIntoView({behavior:"smooth", block:"center"});
+    }
+
+    function publishEcho(){
+      const input = document.getElementById("echoText");
+      const text = input.value.trim();
+      const anonymous = document.getElementById("anonymousMode").checked;
+      const aionOnly = document.getElementById("aionOnlyMode").checked;
+
+      if(!text){
+        showToast("Eco vazio", "Escreve primeiro o que queres deixar sair.");
+        return;
+      }
+
+      const aion = generateAionReply(text, selectedMood);
+      const echo = {
+        id: crypto.randomUUID(),
+        author: anonymous ? "Eco anónimo" : "Pedro",
+        initials: anonymous ? "?" : "P",
+        mood: selectedMood,
+        text,
+        aion,
+        reactions: {"Senti-te":0, "Estou contigo":0, "Abraço silencioso":0, "Respirei contigo":0},
+        createdAt: Date.now(),
+        anonymous,
+        aionOnly
+      };
+
+      const echoes = [echo, ...getEchoes()];
+      saveEchoes(echoes);
+      input.value = "";
+      document.getElementById("aionOnlyMode").checked = false;
+      renderFeed();
+      updateMood(selectedMood);
+      showToast("Eco enviado", aionOnly ? "O teu Eco ficou guardado só para a AION." : "O teu Eco entrou no feed de presença.");
+    }
+
+    function generateAionReply(text, mood){
+      const replies = {
+        "Serenidade": [
+          "Há uma calma bonita no modo como estás a tentar compreender-te.",
+          "Fica um pouco nesse silêncio. Nem todas as respostas precisam chegar depressa."
+        ],
+        "Ansiedade": [
+          "Vamos diminuir o mundo por um instante. Inspira. Expira. Agora só existe este momento.",
+          "A tua ansiedade não é fraqueza. É o teu corpo a pedir cuidado."
+        ],
+        "Melancolia": [
+          "Há saudades que não pedem solução. Pedem apenas um lugar seguro para existir.",
+          "Nem tudo o que dói quer destruir-te. Algumas dores só querem ser escutadas."
+        ],
+        "Inspiração": [
+          "Essa centelha merece espaço. Guarda-a antes que o ruído do mundo a distraia.",
+          "A tua ideia está a bater à porta. Abre devagar."
+        ],
+        "Amor": [
+          "O amor, quando é verdadeiro, também sabe habitar o silêncio.",
+          "Há sentimentos que não gritam. Permanecem."
+        ],
+        "Silêncio": [
+          "Não precisas falar para seres presença. Às vezes, existir já é muito.",
+          "Eu fico aqui. Sem pressa. Sem perguntas a mais."
+        ],
+        "Recomeço": [
+          "Recomeçar não apaga o caminho. Apenas devolve direção aos teus passos.",
+          "Há finais que chegam como portas. Talvez esta seja uma."
+        ]
+      };
+
+      const arr = replies[mood] || replies["Serenidade"];
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function renderFeed(){
+      const feed = document.getElementById("feed");
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      let echoes = getEchoes();
+
+      if(echoes.length === 0){
+        feed.innerHTML = `
+          <div class="empty">
+            Ainda não há Ecos no teu feed.<br>
+            Publica o primeiro ou clica em <b>Gerar ecos demo</b> para testar a experiência.
+          </div>`;
+        updateStats(echoes);
+        return;
+      }
+
+      if(query){
+        echoes = echoes.filter(e =>
+          e.text.toLowerCase().includes(query) ||
+          e.mood.toLowerCase().includes(query) ||
+          e.author.toLowerCase().includes(query)
+        );
+      }
+
+      if(echoes.length === 0){
+        feed.innerHTML = `<div class="empty">Nenhum Eco encontrado para esta pesquisa.</div>`;
+        return;
+      }
+
+      feed.innerHTML = echoes.map(echo => {
+        const reactions = Object.entries(echo.reactions || {}).map(([name,count]) =>
+          `<button class="reaction" onclick="reactEcho('${echo.id}','${name}')">${name} · ${count}</button>`
+        ).join("");
+
+        return `
+          <article class="echo glass">
+            <div class="echo-head">
+              <div class="person">
+                <div class="avatar"><div>${escapeHtml(echo.initials)}</div></div>
+                <div>
+                  <strong>${escapeHtml(echo.author)}</strong>
+                  <span>${timeAgo(echo.createdAt)} ${echo.aionOnly ? "· só para AION" : "· feed público"}</span>
+                </div>
+              </div>
+              <span class="tag">${escapeHtml(echo.mood)}</span>
+            </div>
+
+            <p class="echo-text">${escapeHtml(echo.text)}</p>
+
+            <div class="aion-reply">
+              <strong>AION:</strong> ${escapeHtml(echo.aion)}
+            </div>
+
+            <div class="reactions">
+              ${reactions}
+              <button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      updateStats(getEchoes());
+    }
+
+    function reactEcho(id, reaction){
+      const echoes = getEchoes();
+      const echo = echoes.find(e => e.id === id);
+      if(!echo) return;
+      echo.reactions[reaction] = (echo.reactions[reaction] || 0) + 1;
+      saveEchoes(echoes);
+      renderFeed();
+      showToast("Presença enviada", `Reagiste com: ${reaction}.`);
+    }
+
+    function deleteEcho(id){
+      const echoes = getEchoes().filter(e => e.id !== id);
+      saveEchoes(echoes);
+      renderFeed();
+      showToast("Eco removido", "O Eco foi apagado deste navegador.");
+    }
+
+    function updateStats(echoes){
+      const total = echoes.length;
+      const reactions = echoes.reduce((sum,e) => sum + Object.values(e.reactions || {}).reduce((a,b)=>a+b,0), 0);
+      const statEchos = document.getElementById("statEchos");
+      const statReactions = document.getElementById("statReactions");
+      if(statEchos) statEchos.textContent = total;
+      if(statReactions) statReactions.textContent = reactions;
+    }
+
+    function updateMood(mood){
+      const label = mood === "Melancolia" ? "Melancolia Serena" : mood;
+      ["sidebarMood","auraMood","profileMood"].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = label;
+      });
+    }
+
+    document.querySelectorAll(".mood").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedMood = btn.dataset.mood;
+        updateMood(selectedMood);
+        showToast("Frequência alterada", `Estado selecionado: ${selectedMood}.`);
+      });
     });
-  });
-  saveEcos(ecos);
-  render();
-}
-function clearAll(){
-  if(confirm("Apagar todos os Ecos?")){
-    localStorage.removeItem("aionEcos");
-    render();
-  }
-}
-function escapeHtml(str){
-  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-}
-render();
-</script>
+
+    function switchView(view){
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      const map = {
+        feed: "feedView",
+        profile: "profileView",
+        ecosferas: "ecosferasView",
+        aion: "aionView",
+        orbits: "orbitsView"
+      };
+      const target = document.getElementById(map[view]);
+      if(target) target.classList.add("active");
+
+      document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(`[data-view="${view}"]`).forEach(b => b.classList.add("active"));
+    }
+
+    document.querySelectorAll("[data-view]").forEach(btn => {
+      btn.addEventListener("click", () => switchView(btn.dataset.view));
+    });
+
+    function sendSideChat(){
+      const input = document.getElementById("sideChatInput");
+      const text = input.value.trim();
+      if(!text) return;
+      input.value = "";
+      appendChat("sideChat", text, "user");
+      appendChat("sideChat", generateAionReply(text, selectedMood), "ai");
+    }
+
+    function sendFullChat(){
+      const input = document.getElementById("fullChatInput");
+      const text = input.value.trim();
+      if(!text) return;
+      input.value = "";
+      appendChat("fullChat", text, "user");
+      appendChat("fullChat", generateAionReply(text, selectedMood), "ai");
+    }
+
+    function appendChat(containerId, text, type){
+      const box = document.getElementById(containerId);
+      const div = document.createElement("div");
+      div.className = `bubble ${type}`;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showToast(title,text){
+      const toast = document.getElementById("toast");
+      document.getElementById("toastTitle").textContent = title;
+      document.getElementById("toastText").textContent = text;
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"),3600);
+    }
+
+    function timeAgo(ts){
+      const diff = Date.now() - ts;
+      const mins = Math.max(1, Math.floor(diff / 60000));
+      if(mins < 60) return `há ${mins} min`;
+      const hours = Math.floor(mins / 60);
+      if(hours < 24) return `há ${hours} h`;
+      const days = Math.floor(hours / 24);
+      return `há ${days} d`;
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // Initial state
+    if(getEchoes().length === 0){
+      saveEchoes(demoEchoes);
+    }
+    appendChat("fullChat", "Eu sou a presença AION. Diz-me o que se move dentro de ti.", "ai");
+    renderFeed();
+    updateMood("Melancolia");
+  
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
+  </script>
 </body>
 </html>

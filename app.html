@@ -6,6 +6,7 @@
   <title>AION Presence — App Social Emocional</title>
   <meta name="description" content="Protótipo funcional da rede social emocional AION Presence."/>
   <meta name="theme-color" content="#05030A"/>
+  <link rel="manifest" href="manifest.json"/>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap');
@@ -1299,6 +1300,12 @@
     appendChat("fullChat", "Eu sou a presença AION. Diz-me o que se move dentro de ti.", "ai");
     renderFeed();
     updateMood("Melancolia");
+  
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
   </script>
 </body>
 </html>
