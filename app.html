@@ -819,6 +819,7 @@
         <button data-view="aion"><span class="ico">◈</span> AION</button>
         <button data-view="orbits"><span class="ico">∞</span> Órbitas</button>
         <button data-view="notifications"><span class="ico">◉</span> Sinais <b id="notifBadgeSide" style="margin-left:auto;color:#39D8FF">0</b></button>
+        <button data-view="moderation"><span class="ico">🛡️</span> Moderação</button>
         <button data-view="profile"><span class="ico">☾</span> Perfil de Alma</button>
       </nav>
 
@@ -944,6 +945,18 @@
       </section>
 
 
+
+      <section id="moderationView" class="orbits-view glass view">
+        <h2>Moderação emocional</h2>
+        <p>Zona de segurança para acompanhar denúncias e manter o AION Presence saudável.</p>
+        <div class="profile-stats">
+          <div class="stat"><strong id="statReports">0</strong><span>Denúncias</span></div>
+          <div class="stat"><strong id="statPendingReports">0</strong><span>Pendentes</span></div>
+          <div class="stat"><strong id="statBlockedWords">8</strong><span>Filtros ativos</span></div>
+        </div>
+        <div class="orbits-list" id="reportsList"></div>
+      </section>
+
       <section id="notificationsView" class="orbits-view glass view">
         <h2>Sinais recebidos</h2>
         <p>Notificações emocionais: reações, órbitas e mensagens da AION.</p>
@@ -1015,6 +1028,7 @@
     <button data-view="aion">◈</button>
     <button data-view="orbits">∞</button>
     <button data-view="notifications">◉</button>
+    <button data-view="moderation">🛡️</button>
     <button data-view="profile">☾</button>
   </nav>
 
@@ -1030,6 +1044,7 @@
     const PROFILES_API = SUPABASE_URL + "/rest/v1/aion_profiles";
     const ORBITS_API = SUPABASE_URL + "/rest/v1/aion_orbits";
     const NOTIFICATIONS_API = SUPABASE_URL + "/rest/v1/aion_notifications";
+    const REPORTS_API = SUPABASE_URL + "/rest/v1/aion_reports";
 
     let selectedMood = "Serenidade";
     let echoesCache = [];
@@ -1037,6 +1052,8 @@
     let profilesCache = [];
     let orbitsCache = [];
     let notificationsCache = [];
+    let reportsCache = [];
+    const BLOCKED_TERMS = ["suicidio","suicídio","matar","ódio extremo","terrorismo","violência gráfica","abuso infantil","dados pessoais"];
 
     function headers(extra = {}) {
       return {
@@ -1412,6 +1429,9 @@
       const anonymous = document.getElementById("anonymousMode").checked;
       const aionOnly = document.getElementById("aionOnlyMode").checked;
       if(!text){ showToast("Eco vazio", "Escreve primeiro o que queres deixar sair."); return; }
+      const safety = checkEcoSafety(text);
+      if(!safety.ok){ showToast("Eco bloqueado", safety.message); return; }
+      if(isSpamText(text)){ showToast("Anti-spam", "Este Eco parece repetitivo ou demasiado curto. Escreve algo mais pessoal."); return; }
       if(!currentProfile) await loadProfile();
       const p = currentProfile || {};
       const echo = {
@@ -1472,7 +1492,7 @@
             </div>
             <p class="echo-text">${escapeHtml(echo.text || "")}</p>
             <div class="aion-reply"><strong>AION:</strong> ${escapeHtml(echo.aion_reply || "Estou contigo neste Eco.")}</div>
-            <div class="reactions">${reactions}<button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button></div>
+            <div class="reactions">${reactions}<button class="reaction" onclick="openReportPrompt('${echo.id}')">Denunciar</button><button class="reaction" onclick="deleteEcho('${echo.id}')">Remover</button></div>
           </article>`;
       }).join("");
       updateStats(await getEchoes());
@@ -1523,13 +1543,14 @@
 
     function switchView(view){
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-      const map = {feed:"feedView",profile:"profileView",ecosferas:"ecosferasView",aion:"aionView",orbits:"orbitsView",notifications:"notificationsView"};
+      const map = {feed:"feedView",profile:"profileView",ecosferas:"ecosferasView",aion:"aionView",orbits:"orbitsView",notifications:"notificationsView",moderation:"moderationView"};
       const target = document.getElementById(map[view]);
       if(target) target.classList.add("active");
       document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(`[data-view="${view}"]`).forEach(b => b.classList.add("active"));
       if(view === "orbits") renderOrbits();
       if(view === "notifications") renderNotifications();
+      if(view === "moderation") renderReports();
     }
 
     document.querySelectorAll("[data-view]").forEach(btn => {
@@ -1550,8 +1571,180 @@
       const text = input.value.trim();
       if(!text) return;
       input.value = "";
-      appendChat("fullChat", text, "user");
-      appendChat("fullChat", generateAionReply(text, selectedMood), "ai");
+  
+    function checkEcoSafety(text){
+      const lower = text.toLowerCase();
+      for(const term of BLOCKED_TERMS){
+        if(lower.includes(term)){
+          return { ok:false, message:"Este Eco contém um termo sensível. Reescreve de forma segura e sem detalhes perigosos." };
+        }
+      }
+      return {ok:true};
+    }
+
+    function isSpamText(text){
+      const cleaned = text.trim().toLowerCase();
+      if(cleaned.length < 6) return true;
+      const words = cleaned.split(/\s+/);
+      if(words.length <= 2 && cleaned.length < 18) return true;
+      return /(.)\1{8,}/.test(cleaned);
+    }
+
+    async function createReport(ecoId, reason, details=""){
+      try{
+        await supaPost(REPORTS_API, {
+          eco_id: ecoId,
+          reporter_profile_id: currentProfile && currentProfile.id ? currentProfile.id : null,
+          reason,
+          details,
+          status: "pending"
+        });
+        await createNotification(currentProfile && currentProfile.id, "report", "Denúncia enviada", "Obrigado por ajudares a manter o AION Presence seguro.");
+        await renderReports();
+        await renderNotifications();
+        showToast("Denúncia enviada", "A denúncia ficou registada para revisão.");
+      }catch(err){
+        console.error(err);
+        showToast("Erro denúncia", "Não consegui enviar a denúncia. Confirma se a tabela aion_reports existe.");
+      }
+    }
+
+    function openReportPrompt(ecoId){
+      const reason = prompt("Motivo da denúncia: spam, ofensivo, perigoso, dados pessoais ou outro?");
+      if(!reason) return;
+      const details = prompt("Queres acrescentar detalhes? Opcional.") || "";
+      createReport(ecoId, reason, details);
+    }
+
+    async function getReports(){
+      try{
+        reportsCache = await supaGet(REPORTS_API + "?select=*&order=created_at.desc");
+        return reportsCache;
+      }catch(err){
+        console.error(err);
+        showToast("Erro", "Não consegui carregar denúncias.");
+        return reportsCache || [];
+      }
+    }
+
+    async function renderReports(){
+      const list = document.getElementById("reportsList");
+      if(!list) return;
+      const reports = await getReports();
+      const pending = reports.filter(r => r.status === "pending");
+      const statReports = document.getElementById("statReports");
+      const statPending = document.getElementById("statPendingReports");
+      if(statReports) statReports.textContent = reports.length;
+      if(statPending) statPending.textContent = pending.length;
+
+      list.innerHTML = "";
+      if(reports.length === 0){
+        list.innerHTML = `<div class="empty">Ainda não existem denúncias.</div>`;
+        return;
+      }
+
+      reports.forEach(r=>{
+        const div = document.createElement("div");
+        div.className = "orbit-item";
+        div.innerHTML = `
+          <div>
+            <strong>${escapeHtml(r.reason || "Denúncia")}</strong>
+            <span>Status: ${escapeHtml(r.status || "pending")} · ${timeAgo(r.created_at)}<br>${escapeHtml(r.details || "Sem detalhes adicionais.")}</span>
+          </div>
+          <span class="tag">${escapeHtml(r.status || "pending")}</span>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    appendChat("fullChat", text, "user");
+  
+    function checkEcoSafety(text){
+      const lower = text.toLowerCase();
+      for(const term of BLOCKED_TERMS){
+        if(lower.includes(term)){
+          return { ok:false, message:"Este Eco contém um termo sensível. Reescreve de forma segura e sem detalhes perigosos." };
+        }
+      }
+      return {ok:true};
+    }
+
+    function isSpamText(text){
+      const cleaned = text.trim().toLowerCase();
+      if(cleaned.length < 6) return true;
+      const words = cleaned.split(/\s+/);
+      if(words.length <= 2 && cleaned.length < 18) return true;
+      return /(.)\1{8,}/.test(cleaned);
+    }
+
+    async function createReport(ecoId, reason, details=""){
+      try{
+        await supaPost(REPORTS_API, {
+          eco_id: ecoId,
+          reporter_profile_id: currentProfile && currentProfile.id ? currentProfile.id : null,
+          reason,
+          details,
+          status: "pending"
+        });
+        await createNotification(currentProfile && currentProfile.id, "report", "Denúncia enviada", "Obrigado por ajudares a manter o AION Presence seguro.");
+        await renderReports();
+        await renderNotifications();
+        showToast("Denúncia enviada", "A denúncia ficou registada para revisão.");
+      }catch(err){
+        console.error(err);
+        showToast("Erro denúncia", "Não consegui enviar a denúncia. Confirma se a tabela aion_reports existe.");
+      }
+    }
+
+    function openReportPrompt(ecoId){
+      const reason = prompt("Motivo da denúncia: spam, ofensivo, perigoso, dados pessoais ou outro?");
+      if(!reason) return;
+      const details = prompt("Queres acrescentar detalhes? Opcional.") || "";
+      createReport(ecoId, reason, details);
+    }
+
+    async function getReports(){
+      try{
+        reportsCache = await supaGet(REPORTS_API + "?select=*&order=created_at.desc");
+        return reportsCache;
+      }catch(err){
+        console.error(err);
+        showToast("Erro", "Não consegui carregar denúncias.");
+        return reportsCache || [];
+      }
+    }
+
+    async function renderReports(){
+      const list = document.getElementById("reportsList");
+      if(!list) return;
+      const reports = await getReports();
+      const pending = reports.filter(r => r.status === "pending");
+      const statReports = document.getElementById("statReports");
+      const statPending = document.getElementById("statPendingReports");
+      if(statReports) statReports.textContent = reports.length;
+      if(statPending) statPending.textContent = pending.length;
+
+      list.innerHTML = "";
+      if(reports.length === 0){
+        list.innerHTML = `<div class="empty">Ainda não existem denúncias.</div>`;
+        return;
+      }
+
+      reports.forEach(r=>{
+        const div = document.createElement("div");
+        div.className = "orbit-item";
+        div.innerHTML = `
+          <div>
+            <strong>${escapeHtml(r.reason || "Denúncia")}</strong>
+            <span>Status: ${escapeHtml(r.status || "pending")} · ${timeAgo(r.created_at)}<br>${escapeHtml(r.details || "Sem detalhes adicionais.")}</span>
+          </div>
+          <span class="tag">${escapeHtml(r.status || "pending")}</span>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    appendChat("fullChat", generateAionReply(text, selectedMood), "ai");
     }
 
     function appendChat(containerId, text, type){
@@ -1585,8 +1778,94 @@
     function escapeHtml(str){ return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
     function escapeAttr(str){ return String(str).replaceAll("'","&#039;").replaceAll('"',"&quot;"); }
 
+
+    function checkEcoSafety(text){
+      const lower = text.toLowerCase();
+      for(const term of BLOCKED_TERMS){
+        if(lower.includes(term)){
+          return { ok:false, message:"Este Eco contém um termo sensível. Reescreve de forma segura e sem detalhes perigosos." };
+        }
+      }
+      return {ok:true};
+    }
+
+    function isSpamText(text){
+      const cleaned = text.trim().toLowerCase();
+      if(cleaned.length < 6) return true;
+      const words = cleaned.split(/\s+/);
+      if(words.length <= 2 && cleaned.length < 18) return true;
+      return /(.)\1{8,}/.test(cleaned);
+    }
+
+    async function createReport(ecoId, reason, details=""){
+      try{
+        await supaPost(REPORTS_API, {
+          eco_id: ecoId,
+          reporter_profile_id: currentProfile && currentProfile.id ? currentProfile.id : null,
+          reason,
+          details,
+          status: "pending"
+        });
+        await createNotification(currentProfile && currentProfile.id, "report", "Denúncia enviada", "Obrigado por ajudares a manter o AION Presence seguro.");
+        await renderReports();
+        await renderNotifications();
+        showToast("Denúncia enviada", "A denúncia ficou registada para revisão.");
+      }catch(err){
+        console.error(err);
+        showToast("Erro denúncia", "Não consegui enviar a denúncia. Confirma se a tabela aion_reports existe.");
+      }
+    }
+
+    function openReportPrompt(ecoId){
+      const reason = prompt("Motivo da denúncia: spam, ofensivo, perigoso, dados pessoais ou outro?");
+      if(!reason) return;
+      const details = prompt("Queres acrescentar detalhes? Opcional.") || "";
+      createReport(ecoId, reason, details);
+    }
+
+    async function getReports(){
+      try{
+        reportsCache = await supaGet(REPORTS_API + "?select=*&order=created_at.desc");
+        return reportsCache;
+      }catch(err){
+        console.error(err);
+        showToast("Erro", "Não consegui carregar denúncias.");
+        return reportsCache || [];
+      }
+    }
+
+    async function renderReports(){
+      const list = document.getElementById("reportsList");
+      if(!list) return;
+      const reports = await getReports();
+      const pending = reports.filter(r => r.status === "pending");
+      const statReports = document.getElementById("statReports");
+      const statPending = document.getElementById("statPendingReports");
+      if(statReports) statReports.textContent = reports.length;
+      if(statPending) statPending.textContent = pending.length;
+
+      list.innerHTML = "";
+      if(reports.length === 0){
+        list.innerHTML = `<div class="empty">Ainda não existem denúncias.</div>`;
+        return;
+      }
+
+      reports.forEach(r=>{
+        const div = document.createElement("div");
+        div.className = "orbit-item";
+        div.innerHTML = `
+          <div>
+            <strong>${escapeHtml(r.reason || "Denúncia")}</strong>
+            <span>Status: ${escapeHtml(r.status || "pending")} · ${timeAgo(r.created_at)}<br>${escapeHtml(r.details || "Sem detalhes adicionais.")}</span>
+          </div>
+          <span class="tag">${escapeHtml(r.status || "pending")}</span>
+        `;
+        list.appendChild(div);
+      });
+    }
+
     appendChat("fullChat", "Eu sou a presença AION. Diz-me o que se move dentro de ti.", "ai");
-    loadProfile().then(() => { renderOrbits(); renderNotifications(); });
+    loadProfile().then(() => { renderOrbits(); renderNotifications(); renderReports(); });
     renderFeed();
     updateMood("Melancolia");
 
