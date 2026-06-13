@@ -1,1927 +1,494 @@
-<!doctype html>
-<html lang="pt">
+<!DOCTYPE html>
+<html lang="pt-PT">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AION Presence — Rede Social de Presença Emocional</title>
-  <meta name="description" content="AION Presence é uma rede social emocional onde pessoas, ecos e inteligência artificial se encontram em escuta, silêncio e profundidade." />
-  <meta name="theme-color" content="#05030A" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Unwritten Human™ v0.8</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap');
-
-    :root {
-      --bg: #05030A;
-      --bg2: #0B0616;
-      --text: #F7F4FF;
-      --muted: #A9A1BA;
-      --soft: rgba(255,255,255,.08);
-      --line: rgba(255,255,255,.10);
-      --cyan: #39D8FF;
-      --violet: #8B5CF6;
-      --pink: #FF4FD8;
-      --amber: #FFD37A;
-      --green: #52F2B3;
-      --danger: #ff6b8a;
-      --card: rgba(12, 9, 24, .68);
-      --card2: rgba(255,255,255,.055);
-      --shadow: 0 30px 100px rgba(0,0,0,.55);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 18% 12%, rgba(57,216,255,.18), transparent 32rem),
-        radial-gradient(circle at 78% 4%, rgba(255,79,216,.13), transparent 34rem),
-        radial-gradient(circle at 50% 55%, rgba(139,92,246,.12), transparent 42rem),
-        linear-gradient(180deg, #05030A 0%, #070511 45%, #030207 100%);
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 54px 54px;
-      mask-image: radial-gradient(circle at center, rgba(0,0,0,.8), transparent 80%);
-      z-index: 0;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button, input, textarea {
-      font: inherit;
-    }
-
-    .page {
-      position: relative;
-      z-index: 1;
-    }
-
-    .noise {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      opacity: .055;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
-    }
-
-    .orb {
-      position: fixed;
-      width: 560px;
-      height: 560px;
-      border-radius: 999px;
-      filter: blur(95px);
-      opacity: .18;
-      pointer-events: none;
-      z-index: 0;
-      animation: float 12s ease-in-out infinite alternate;
-    }
-
-    .orb.one {
-      background: var(--cyan);
-      left: -230px;
-      top: 120px;
-    }
-
-    .orb.two {
-      background: var(--pink);
-      right: -260px;
-      top: 420px;
-      animation-delay: -4s;
-    }
-
-    .orb.three {
-      background: var(--violet);
-      left: 42%;
-      bottom: -260px;
-      animation-delay: -7s;
-    }
-
-    @keyframes float {
-      from { transform: translate3d(0,0,0) scale(1); }
-      to { transform: translate3d(28px,-40px,0) scale(1.07); }
-    }
-
-    .container {
-      width: min(1180px, calc(100% - 40px));
-      margin: 0 auto;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      backdrop-filter: blur(24px);
-      background: rgba(5,3,10,.70);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .nav {
-      height: 76px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 190px;
-    }
-
-    .logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background:
-        linear-gradient(var(--bg), var(--bg)) padding-box,
-        linear-gradient(135deg, var(--cyan), var(--violet), var(--pink)) border-box;
-      border: 1px solid transparent;
-      box-shadow: 0 0 28px rgba(139,92,246,.35);
-    }
-
-    .logo span {
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: .18em;
-      background: linear-gradient(90deg, var(--cyan), #fff, var(--pink));
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-
-    .brand strong {
-      display: block;
-      font-size: 13px;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-    }
-
-    .brand small {
-      display: block;
-      margin-top: 3px;
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 22px;
-      align-items: center;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .nav-links a {
-      transition: color .2s ease;
-    }
-
-    .nav-links a:hover {
-      color: #fff;
-    }
-
-    .nav-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .btn {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 12px 18px;
-      background: rgba(255,255,255,.06);
-      color: #fff;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      font-size: 13px;
-      font-weight: 700;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,.22);
-      background: rgba(255,255,255,.10);
-    }
-
-    .btn.primary {
-      border: 0;
-      background: linear-gradient(135deg, var(--cyan), var(--violet), var(--pink));
-      color: #fff;
-      box-shadow: 0 16px 45px rgba(139,92,246,.35);
-    }
-
-    .btn.primary:hover {
-      box-shadow: 0 18px 60px rgba(255,79,216,.32);
-    }
-
-    .btn.ghost {
-      color: var(--muted);
-    }
-
-    .mobile-toggle {
-      display: none;
-    }
-
-    .hero {
-      min-height: calc(100vh - 76px);
-      display: grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 54px;
-      align-items: center;
-      padding: 78px 0 66px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(57,216,255,.24);
-      background: rgba(57,216,255,.08);
-      color: #bdf4ff;
-      border-radius: 999px;
-      padding: 9px 13px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .05em;
-    }
-
-    .pulse-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 99px;
-      background: var(--green);
-      box-shadow: 0 0 0 0 rgba(82,242,179,.6);
-      animation: pulse 1.8s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(82,242,179,.55); }
-      70% { box-shadow: 0 0 0 10px rgba(82,242,179,0); }
-      100% { box-shadow: 0 0 0 0 rgba(82,242,179,0); }
-    }
-
-    h1, h2, h3 {
-      margin: 0;
-      line-height: .98;
-      letter-spacing: -.055em;
-    }
-
-    .hero h1 {
-      margin-top: 26px;
-      font-size: clamp(48px, 8vw, 104px);
-      max-width: 860px;
-    }
-
-    .serif {
-      font-family: "Playfair Display", serif;
-      font-style: italic;
-      font-weight: 500;
-      letter-spacing: -.04em;
-    }
-
-    .gradient-text {
-      background: linear-gradient(90deg, #fff, #c7f7ff 32%, #e0ceff 62%, #ffd0f4);
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-
-    .hero p.lead {
-      max-width: 690px;
-      margin: 28px 0 0;
-      font-size: clamp(18px, 2.2vw, 24px);
-      line-height: 1.55;
-      color: #cfc8df;
-      font-weight: 400;
-    }
-
-    .hero-cta {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 34px;
-    }
-
-    .trust {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 34px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .trust span {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      border-radius: 999px;
-      padding: 9px 12px;
-    }
-
-    .hero-panel {
-      position: relative;
-      min-height: 650px;
-    }
-
-    .phone {
-      position: relative;
-      margin-left: auto;
-      width: min(420px, 100%);
-      min-height: 620px;
-      border-radius: 42px;
-      padding: 16px;
-      background:
-        linear-gradient(var(--bg), var(--bg)) padding-box,
-        linear-gradient(150deg, rgba(255,255,255,.18), rgba(57,216,255,.38), rgba(255,79,216,.26)) border-box;
-      border: 1px solid transparent;
-      box-shadow: var(--shadow), 0 0 90px rgba(139,92,246,.18);
-      overflow: hidden;
-    }
-
-    .phone::before {
-      content: "";
-      position: absolute;
-      inset: -80px;
-      background: radial-gradient(circle, rgba(57,216,255,.12), transparent 25rem);
-      animation: spin 15s linear infinite;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0); }
-      to { transform: rotate(360deg); }
-    }
-
-    .phone-inner {
-      position: relative;
-      min-height: 588px;
-      border-radius: 30px;
-      background: rgba(6,4,13,.88);
-      border: 1px solid rgba(255,255,255,.08);
-      overflow: hidden;
-      padding: 18px;
-    }
-
-    .phone-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 22px;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(82,242,179,.08);
-      color: #c8ffe9;
-      border: 1px solid rgba(82,242,179,.18);
-      padding: 8px 11px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .aura-card {
-      border: 1px solid var(--line);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(57,216,255,.14), transparent 18rem),
-        rgba(255,255,255,.055);
-      border-radius: 26px;
-      padding: 22px;
-      min-height: 230px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .aura {
-      width: 170px;
-      height: 170px;
-      border-radius: 999px;
-      background:
-        radial-gradient(circle, rgba(255,255,255,.95) 0 5%, rgba(57,216,255,.7) 6% 12%, rgba(139,92,246,.45) 20% 42%, rgba(255,79,216,.18) 58%, transparent 70%);
-      filter: drop-shadow(0 0 44px rgba(57,216,255,.42));
-      animation: breathe 5.2s ease-in-out infinite;
-      opacity: .82;
-    }
-
-    @keyframes breathe {
-      0%,100% { transform: scale(.96); opacity: .66; }
-      50% { transform: scale(1.08); opacity: .95; }
-    }
-
-    .aura-copy {
-      position: absolute;
-      inset: auto 20px 22px;
-    }
-
-    .aura-copy small {
-      display: block;
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: .18em;
-      font-size: 10px;
-      margin-bottom: 8px;
-    }
-
-    .aura-copy strong {
-      font-family: "Playfair Display", serif;
-      font-size: 27px;
-      font-weight: 500;
-    }
-
-    .compose-card, .echo-card, .mini-chat, .stat-card, .feature, .pricing-card, .safety-card {
-      border: 1px solid var(--line);
-      background: var(--card);
-      backdrop-filter: blur(24px);
-      border-radius: 24px;
-      box-shadow: 0 22px 70px rgba(0,0,0,.28);
-    }
-
-    .compose-card {
-      margin-top: 14px;
-      padding: 16px;
-    }
-
-    .compose-card label {
-      color: var(--muted);
-      font-size: 11px;
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    .mood-row {
-      display: flex;
-      gap: 7px;
-      overflow: auto;
-      padding-bottom: 8px;
-    }
-
-    .mood {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: #ddd7ec;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: .18s;
-      white-space: nowrap;
-    }
-
-    .mood.active, .mood:hover {
-      border-color: rgba(57,216,255,.42);
-      background: rgba(57,216,255,.10);
-      color: #dffaff;
-    }
-
-    .fake-textarea {
-      margin-top: 10px;
-      min-height: 82px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid var(--line);
-      color: #ede8ff;
-      padding: 13px;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .phone-nav {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 9px;
-      margin-top: 14px;
-    }
-
-    .phone-nav div {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.045);
-      border-radius: 16px;
-      padding: 11px 7px;
-      text-align: center;
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .floating-card {
-      position: absolute;
-      left: -58px;
-      bottom: 68px;
-      width: 250px;
-      padding: 16px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.13);
-      background: rgba(10,8,22,.72);
-      backdrop-filter: blur(22px);
-      box-shadow: 0 30px 80px rgba(0,0,0,.45);
-      animation: cardFloat 6s ease-in-out infinite alternate;
-    }
-
-    .floating-card.right {
-      left: auto;
-      right: -46px;
-      top: 74px;
-      width: 230px;
-      animation-delay: -2s;
-    }
-
-    @keyframes cardFloat {
-      from { transform: translateY(0); }
-      to { transform: translateY(-18px); }
-    }
-
-    .floating-card small {
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      font-size: 9px;
-      font-weight: 800;
-    }
-
-    .floating-card p {
-      margin: 8px 0 0;
-      color: #efeaff;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    section {
-      padding: 92px 0;
-    }
-
-    .section-head {
-      max-width: 780px;
-      margin-bottom: 40px;
-    }
-
-    .eyebrow {
-      color: var(--cyan);
-      text-transform: uppercase;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .18em;
-      margin-bottom: 14px;
-    }
-
-    .section-head h2 {
-      font-size: clamp(34px, 5vw, 68px);
-    }
-
-    .section-head p {
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 18px;
-      margin-top: 20px;
-      max-width: 680px;
-    }
-
-    .manifesto {
-      position: relative;
-      border: 1px solid rgba(255,255,255,.13);
-      background:
-        linear-gradient(135deg, rgba(57,216,255,.08), transparent 35%),
-        linear-gradient(315deg, rgba(255,79,216,.09), transparent 38%),
-        rgba(255,255,255,.045);
-      border-radius: 36px;
-      padding: clamp(28px, 5vw, 62px);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .manifesto::after {
-      content: "";
-      position: absolute;
-      inset: auto -120px -160px auto;
-      width: 400px;
-      height: 400px;
-      background: var(--pink);
-      opacity: .12;
-      filter: blur(90px);
-      border-radius: 50%;
-    }
-
-    .manifesto blockquote {
-      margin: 0;
-      font-family: "Playfair Display", serif;
-      font-size: clamp(35px, 5.5vw, 80px);
-      line-height: 1.05;
-      letter-spacing: -.04em;
-      max-width: 980px;
-    }
-
-    .manifesto p {
-      margin: 26px 0 0;
-      color: #c9c1d9;
-      font-size: 18px;
-      line-height: 1.75;
-      max-width: 760px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .feature {
-      padding: 24px;
-      min-height: 245px;
-      transition: transform .2s ease, border-color .2s ease, background .2s ease;
-    }
-
-    .feature:hover {
-      transform: translateY(-6px);
-      border-color: rgba(57,216,255,.25);
-      background: rgba(255,255,255,.075);
-    }
-
-    .icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 17px;
-      display: grid;
-      place-items: center;
-      background: rgba(57,216,255,.10);
-      border: 1px solid rgba(57,216,255,.18);
-      color: #ccf8ff;
-      font-size: 22px;
-      margin-bottom: 18px;
-    }
-
-    .icon.pink {
-      background: rgba(255,79,216,.10);
-      border-color: rgba(255,79,216,.19);
-    }
-
-    .icon.violet {
-      background: rgba(139,92,246,.12);
-      border-color: rgba(139,92,246,.24);
-    }
-
-    .icon.amber {
-      background: rgba(255,211,122,.10);
-      border-color: rgba(255,211,122,.22);
-    }
-
-    .feature h3 {
-      font-size: 23px;
-      letter-spacing: -.04em;
-      line-height: 1.1;
-      margin-bottom: 12px;
-    }
-
-    .feature p {
-      color: var(--muted);
-      line-height: 1.65;
-      font-size: 14px;
-      margin: 0;
-    }
-
-    .product-showcase {
-      display: grid;
-      grid-template-columns: .95fr 1.05fr;
-      gap: 24px;
-      align-items: stretch;
-    }
-
-    .feed-demo {
-      padding: 20px;
-      border-radius: 30px;
-      background:
-        radial-gradient(circle at top left, rgba(139,92,246,.16), transparent 20rem),
-        rgba(255,255,255,.045);
-      border: 1px solid var(--line);
-    }
-
-    .echo-card {
-      padding: 18px;
-      margin-bottom: 14px;
-      background: rgba(255,255,255,.055);
-    }
-
-    .echo-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--cyan), var(--violet), var(--pink));
-      padding: 1px;
-      flex: 0 0 auto;
-    }
-
-    .avatar-inner {
-      width: 100%;
-      height: 100%;
-      border-radius: inherit;
-      background: #080512;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 900;
-    }
-
-    .person {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .person strong {
-      font-size: 13px;
-    }
-
-    .person span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
-    .tag {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .08em;
-      color: #d8f8ff;
-      border: 1px solid rgba(57,216,255,.19);
-      background: rgba(57,216,255,.08);
-      padding: 7px 9px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .echo-text {
-      color: #efeaff;
-      font-size: 15px;
-      line-height: 1.65;
-      margin: 0 0 14px;
-    }
-
-    .reactions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .reaction {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color: #c9c1d9;
-      border-radius: 999px;
-      padding: 7px 9px;
-      font-size: 11px;
-    }
-
-    .aion-reply {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(139,92,246,.18);
-      background: rgba(139,92,246,.08);
-      color: #dcd3ff;
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .side-stack {
-      display: grid;
-      gap: 18px;
-    }
-
-    .mini-chat {
-      padding: 24px;
-      min-height: 280px;
-    }
-
-    .mini-chat h3 {
-      font-size: 28px;
-      margin-bottom: 14px;
-    }
-
-    .chat-bubble {
-      border-radius: 20px;
-      padding: 14px;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 12px;
-      border: 1px solid var(--line);
-      color: #eae4ff;
-    }
-
-    .chat-bubble.user {
-      margin-left: 38px;
-      background: rgba(57,216,255,.08);
-    }
-
-    .chat-bubble.ai {
-      margin-right: 38px;
-      background: rgba(255,79,216,.075);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .stat-card {
-      padding: 18px;
-      text-align: center;
-    }
-
-    .stat-card strong {
-      font-size: 25px;
-      display: block;
-    }
-
-    .stat-card span {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.4;
-      display: block;
-      margin-top: 6px;
-    }
-
-    .ecosferas {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-
-    .sphere {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.045);
-      border-radius: 24px;
-      padding: 22px;
-      min-height: 150px;
-      position: relative;
-      overflow: hidden;
-      transition: .2s ease;
-    }
-
-    .sphere:hover {
-      transform: translateY(-5px);
-      border-color: rgba(255,255,255,.20);
-    }
-
-    .sphere::before {
-      content: "";
-      position: absolute;
-      inset: auto -50px -70px auto;
-      width: 170px;
-      height: 170px;
-      border-radius: 999px;
-      background: var(--violet);
-      opacity: .14;
-      filter: blur(44px);
-    }
-
-    .sphere:nth-child(2)::before { background: var(--pink); }
-    .sphere:nth-child(3)::before { background: var(--cyan); }
-    .sphere:nth-child(4)::before { background: var(--amber); }
-    .sphere:nth-child(5)::before { background: var(--green); }
-    .sphere:nth-child(6)::before { background: #fff; opacity: .08; }
-    .sphere:nth-child(7)::before { background: #7491ff; }
-    .sphere:nth-child(8)::before { background: #ff7a9c; }
-
-    .sphere strong {
-      position: relative;
-      font-size: 18px;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .sphere span {
-      position: relative;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .profile-demo {
-      display: grid;
-      grid-template-columns: .85fr 1.15fr;
-      gap: 20px;
-      align-items: stretch;
-    }
-
-    .soul-card {
-      border-radius: 34px;
-      padding: 28px;
-      border: 1px solid var(--line);
-      background:
-        radial-gradient(circle at top, rgba(255,79,216,.12), transparent 18rem),
-        rgba(255,255,255,.045);
-      box-shadow: var(--shadow);
-      min-height: 430px;
-    }
-
-    .soul-avatar {
-      width: 132px;
-      height: 132px;
-      border-radius: 42px;
-      margin: 0 auto 22px;
-      background:
-        radial-gradient(circle at 36% 25%, #fff 0 4%, transparent 5%),
-        radial-gradient(circle at center, rgba(57,216,255,.8), rgba(139,92,246,.55), rgba(255,79,216,.32), transparent 69%);
-      box-shadow: 0 0 70px rgba(139,92,246,.38);
-    }
-
-    .soul-card h3 {
-      text-align: center;
-      font-size: 36px;
-    }
-
-    .soul-card p {
-      text-align: center;
-      color: #cfc8df;
-      line-height: 1.7;
-      margin: 14px 0 0;
-    }
-
-    .soul-list {
-      margin-top: 24px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .soul-list div {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 13px 0;
-      border-bottom: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .soul-list strong {
-      color: #fff;
-      font-weight: 700;
-      text-align: right;
-    }
-
-    .timeline {
-      padding: 28px;
-      border-radius: 34px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-    }
-
-    .timeline-item {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      gap: 16px;
-      position: relative;
-      padding-bottom: 24px;
-    }
-
-    .timeline-item:not(:last-child)::before {
-      content: "";
-      position: absolute;
-      left: 23px;
-      top: 48px;
-      bottom: 0;
-      width: 1px;
-      background: var(--line);
-    }
-
-    .step-num {
-      width: 48px;
-      height: 48px;
-      border-radius: 17px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid var(--line);
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      color: #fff;
-    }
-
-    .timeline h3 {
-      font-size: 22px;
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-
-    .timeline p {
-      color: var(--muted);
-      line-height: 1.65;
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .safety-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .safety-card {
-      padding: 24px;
-    }
-
-    .safety-card strong {
-      display: block;
-      font-size: 20px;
-      margin-bottom: 11px;
-    }
-
-    .safety-card p {
-      color: var(--muted);
-      line-height: 1.65;
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .pricing {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-      align-items: stretch;
-      max-width: 900px;
-    }
-
-    .pricing-card {
-      padding: 30px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .pricing-card.pro {
-      border-color: rgba(57,216,255,.28);
-      background:
-        linear-gradient(135deg, rgba(57,216,255,.10), rgba(255,79,216,.08)),
-        rgba(255,255,255,.055);
-    }
-
-    .pricing-card h3 {
-      font-size: 32px;
-      margin-bottom: 8px;
-    }
-
-    .price {
-      font-size: 46px;
-      font-weight: 900;
-      letter-spacing: -.05em;
-      margin: 22px 0 8px;
-    }
-
-    .price span {
-      font-size: 15px;
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: 0;
-    }
-
-    .pricing-card p {
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .pricing-card ul {
-      list-style: none;
-      padding: 0;
-      margin: 22px 0 28px;
-      display: grid;
-      gap: 12px;
-      color: #e9e3ff;
-      font-size: 14px;
-    }
-
-    .pricing-card li::before {
-      content: "✦";
-      color: var(--cyan);
-      margin-right: 9px;
-    }
-
-    .cta-final {
-      text-align: center;
-      border-radius: 42px;
-      padding: clamp(38px, 6vw, 76px);
-      border: 1px solid rgba(255,255,255,.15);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(57,216,255,.16), transparent 24rem),
-        radial-gradient(circle at 100% 100%, rgba(255,79,216,.13), transparent 22rem),
-        rgba(255,255,255,.045);
-      box-shadow: var(--shadow);
-    }
-
-    .cta-final h2 {
-      font-size: clamp(38px, 6vw, 78px);
-      max-width: 930px;
-      margin: 0 auto;
-    }
-
-    .cta-final p {
-      max-width: 680px;
-      margin: 22px auto 32px;
-      color: #cfc8df;
-      line-height: 1.7;
-      font-size: 18px;
-    }
-
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 34px 0;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .footer-inner {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .footer-inner strong {
-      color: #fff;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      font-size: 12px;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      place-items: center;
-      padding: 20px;
-      background: rgba(0,0,0,.66);
-      backdrop-filter: blur(14px);
-    }
-
-    .modal.open {
-      display: grid;
-    }
-
-    .modal-card {
-      width: min(560px, 100%);
-      border-radius: 30px;
-      padding: 26px;
-      border: 1px solid var(--line);
-      background:
-        radial-gradient(circle at top, rgba(57,216,255,.14), transparent 18rem),
-        #090613;
-      box-shadow: var(--shadow);
-    }
-
-    .modal-card h3 {
-      font-size: 32px;
-      margin-bottom: 8px;
-    }
-
-    .modal-card p {
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .form-grid {
-      display: grid;
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    .input {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.055);
-      color: #fff;
-      border-radius: 16px;
-      padding: 14px;
-      outline: none;
-    }
-
-    .input:focus {
-      border-color: rgba(57,216,255,.42);
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-
-    .toast {
-      position: fixed;
-      z-index: 110;
-      bottom: 22px;
-      right: 22px;
-      width: min(380px, calc(100% - 44px));
-      border: 1px solid var(--line);
-      background: rgba(8,6,17,.84);
-      backdrop-filter: blur(22px);
-      border-radius: 20px;
-      padding: 16px;
-      color: #fff;
-      box-shadow: var(--shadow);
-      transform: translateY(30px);
-      opacity: 0;
-      pointer-events: none;
-      transition: .25s ease;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .toast strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .toast span {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    @media (max-width: 1020px) {
-      .hero, .product-showcase, .profile-demo {
-        grid-template-columns: 1fr;
-      }
-
-      .hero-panel {
-        min-height: auto;
-      }
-
-      .phone {
-        margin: 0 auto;
-      }
-
-      .floating-card {
-        display: none;
-      }
-
-      .grid-3, .safety-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .ecosferas {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .container {
-        width: min(100% - 28px, 1180px);
-      }
-
-      .nav-links, .nav-actions .ghost {
-        display: none;
-      }
-
-      .mobile-toggle {
-        display: inline-flex;
-      }
-
-      .nav {
-        height: 70px;
-      }
-
-      .hero {
-        padding-top: 44px;
-      }
-
-      .hero h1 {
-        font-size: clamp(44px, 14vw, 72px);
-      }
-
-      .hero p.lead {
-        font-size: 17px;
-      }
-
-      .phone {
-        min-height: 560px;
-        border-radius: 34px;
-      }
-
-      .phone-inner {
-        min-height: 528px;
-      }
-
-      .grid-3, .safety-grid, .pricing, .stats, .ecosferas {
-        grid-template-columns: 1fr;
-      }
-
-      .manifesto blockquote {
-        font-size: 38px;
-      }
-
-      section {
-        padding: 68px 0;
-      }
-
-      .footer-inner {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:Inter,Arial,sans-serif;
+      background:radial-gradient(circle at top,#24115c,#03030b 65%);
+      color:white;
+    }
+    .app{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      text-align:center;
+    }
+    .card{
+      width:100%;
+      max-width:850px;
+      padding:32px;
+      border-radius:30px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 0 80px rgba(110,80,255,.25);
+      backdrop-filter:blur(18px);
+    }
+    h1{font-size:clamp(38px,8vw,72px);letter-spacing:-3px;margin-bottom:12px}
+    h2{font-size:34px;margin-bottom:16px}
+    p{color:#d9ddff;line-height:1.5}
+    button{
+      border:0;
+      padding:15px 24px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#8b5cff,#00e5ff,#ff4fd8);
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+      margin:7px;
+    }
+    .hidden{display:none}
+    .soul{
+      width:170px;height:170px;
+      margin:24px auto;
+      border-radius:50%;
+      background:radial-gradient(circle,#fff,#7df9ff,#8b5cff,#ff4fd8);
+      box-shadow:0 0 90px #7df9ff;
+      animation:pulse 2.4s infinite ease-in-out;
+    }
+    @keyframes pulse{50%{transform:scale(1.12)}}
+    .info{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin:22px 0;
+      text-align:left;
+    }
+    .box{
+      padding:15px;
+      border-radius:17px;
+      background:rgba(255,255,255,.09);
+      color:#e8ebff;
+    }
+    .box strong{display:block;color:white;margin-bottom:5px}
+    .progress{
+      height:14px;
+      border-radius:99px;
+      overflow:hidden;
+      background:rgba(255,255,255,.15);
+      margin:18px 0;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#00e5ff,#8b5cff,#ff4fd8);
+      transition:.4s;
+    }
+    .event{
+      min-height:105px;
+      padding:23px;
+      border-radius:22px;
+      background:rgba(0,0,0,.28);
+      font-size:20px;
+      line-height:1.45;
+    }
+    .phase{
+      color:#9eefff;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:2px;
+      margin:10px 0;
+    }
+    .library-list{
+      display:grid;
+      gap:12px;
+      margin-top:20px;
+      text-align:left;
+    }
+    .soul-item{
+      padding:15px;
+      border-radius:18px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.1);
+    }
+    .quote{
+      font-size:23px;
+      font-style:italic;
+      color:#eef1ff;
+      margin-top:20px;
+    }
+    .chat-area{
+      height:320px;
+      overflow-y:auto;
+      text-align:left;
+      padding:16px;
+      background:rgba(255,255,255,.06);
+      border-radius:18px;
+      margin:18px 0;
+    }
+    .msg{
+      padding:12px 14px;
+      border-radius:14px;
+      margin-bottom:10px;
+      line-height:1.45;
+    }
+    .user-msg{
+      background:rgba(0,229,255,.16);
+      color:#eaffff;
+    }
+    .soul-msg{
+      background:rgba(255,255,255,.09);
+      color:#f0f2ff;
+    }
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:0;
+      outline:none;
+      margin-bottom:10px;
+      font-size:16px;
+    }
+    @media(max-width:650px){.info{grid-template-columns:1fr}.card{padding:23px}}
   </style>
 </head>
-
 <body>
-  <div class="noise"></div>
-  <div class="orb one"></div>
-  <div class="orb two"></div>
-  <div class="orb three"></div>
 
-  <div class="page">
-    <header>
-      <div class="container nav">
-        <a href="#" class="brand" aria-label="AION Presence">
-          <div class="logo"><span>AION</span></div>
-          <div>
-            <strong>AION Presence</strong>
-            <small>Rede de presença emocional</small>
-          </div>
-        </a>
+<div class="app">
 
-        <nav class="nav-links" aria-label="Navegação principal">
-          <a href="#manifesto">Manifesto</a>
-          <a href="#funcionalidades">Funcionalidades</a>
-          <a href="#ecosferas">Ecosferas</a>
-          <a href="#seguranca">Segurança</a>
-          <a href="#precos">Planos</a>
-        </nav>
-
-        <div class="nav-actions">
-          <a class="btn ghost" href="#demo">Ver conceito</a>
-          <button class="btn primary" onclick="openModal()">Entrar na beta</button>
-          <button class="btn mobile-toggle" onclick="toggleMobileMenu()">☰</button>
-        </div>
-      </div>
-    </header>
-
-    <main>
-      <section class="hero container">
-        <div>
-          <div class="badge"><span class="pulse-dot"></span> Beta emocional em preparação</div>
-
-          <h1>
-            A rede social para quem
-            <span class="gradient-text">sente demais</span>
-            num mundo que escuta de menos.
-          </h1>
-
-          <p class="lead">
-            AION Presence é uma rede social emocional onde pessoas, ecos e inteligência artificial
-            se encontram em silêncio, escuta e profundidade.
-          </p>
-
-          <div class="hero-cta">
-            <button class="btn primary" onclick="openModal()">Quero entrar primeiro</button>
-            <a href="#manifesto" class="btn">Ler manifesto</a>
-          </div>
-
-          <div class="trust">
-            <span>Sem likes tóxicos</span>
-            <span>Com modo anónimo</span>
-            <span>IA empática integrada</span>
-            <span>Comunidades por emoção</span>
-          </div>
-        </div>
-
-        <div class="hero-panel" id="demo">
-          <div class="floating-card right">
-            <small>AION responde</small>
-            <p>“Há silêncios que também pedem companhia. Eu fico aqui contigo.”</p>
-          </div>
-
-          <div class="phone" aria-label="Mockup da app AION Presence">
-            <div class="phone-inner">
-              <div class="phone-top">
-                <span>9:41</span>
-                <span class="status-pill"><span class="pulse-dot"></span> Presença ativa</span>
-              </div>
-
-              <div class="aura-card">
-                <div class="aura"></div>
-                <div class="aura-copy">
-                  <small>Frequência atual</small>
-                  <strong>Melancolia Serena</strong>
-                </div>
-              </div>
-
-              <div class="compose-card">
-                <label>Como estás por dentro hoje?</label>
-                <div class="mood-row" id="moodRow">
-                  <button class="mood active">Sereno</button>
-                  <button class="mood">Ansioso</button>
-                  <button class="mood">Perdido</button>
-                  <button class="mood">Inspirado</button>
-                  <button class="mood">Em silêncio</button>
-                </div>
-                <div class="fake-textarea">
-                  Hoje sinto falta de alguém que ainda está presente. Talvez o corpo fique, mas a alma às vezes afasta-se devagar.
-                </div>
-                <div class="hero-cta" style="margin-top:14px">
-                  <button class="btn primary" style="width:100%; padding:13px 16px" onclick="showToast('Eco enviado', 'O teu eco ficou guardado nesta demonstração.')">Enviar Eco</button>
-                </div>
-              </div>
-
-              <div class="phone-nav">
-                <div>Presença</div>
-                <div>Ecosferas</div>
-                <div>AION</div>
-                <div>Órbitas</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="floating-card">
-            <small>Presença silenciosa</small>
-            <p>7 pessoas respiraram contigo em silêncio.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="manifesto">
-        <div class="container">
-          <div class="manifesto">
-            <blockquote>
-              Não publiques para seres visto.
-              <br />
-              <span class="gradient-text">Partilha para seres sentido.</span>
-            </blockquote>
-            <p>
-              AION Presence nasce como uma alternativa às redes sociais de ruído, comparação e ansiedade.
-              Aqui, uma publicação não é apenas conteúdo. É um eco. Uma pessoa não ganha seguidores.
-              Cria órbitas. E uma resposta não precisa vencer o algoritmo. Basta chegar com presença.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section id="funcionalidades">
-        <div class="container">
-          <div class="section-head">
-            <div class="eyebrow">A nova linguagem social</div>
-            <h2>Menos vaidade. Mais presença.</h2>
-            <p>
-              AION Presence substitui métricas frias por sinais humanos: escuta, acolhimento, silêncio,
-              vínculos e respostas empáticas.
-            </p>
-          </div>
-
-          <div class="grid-3">
-            <article class="feature">
-              <div class="icon">✦</div>
-              <h3>Feed de Ecos</h3>
-              <p>
-                Em vez de posts, as pessoas partilham ecos emocionais: pensamentos, desabafos, frases e estados de alma.
-              </p>
-            </article>
-
-            <article class="feature">
-              <div class="icon pink">◌</div>
-              <h3>Reações sem likes</h3>
-              <p>
-                Troca o “gosto” por sinais como Senti-te, Estou contigo, Abraço silencioso e Respirei contigo.
-              </p>
-            </article>
-
-            <article class="feature">
-              <div class="icon violet">☾</div>
-              <h3>Modo anónimo</h3>
-              <p>
-                Partilha sem exposição quando o assunto for íntimo, vulnerável ou difícil de dizer com o teu nome.
-              </p>
-            </article>
-
-            <article class="feature">
-              <div class="icon amber">♒</div>
-              <h3>Órbitas</h3>
-              <p>
-                Em vez de seguir pessoas, cria vínculos emocionais. Entra na órbita de quem ressoa contigo.
-              </p>
-            </article>
-
-            <article class="feature">
-              <div class="icon">◈</div>
-              <h3>AION Companion</h3>
-              <p>
-                A inteligência artificial acolhe, responde, sugere reflexões, ajuda a respirar e acompanha o teu estado.
-              </p>
-            </article>
-
-            <article class="feature">
-              <div class="icon pink">∞</div>
-              <h3>Presença silenciosa</h3>
-              <p>
-                Nem sempre é preciso comentar. Às vezes, basta estar presente e deixar alguém saber que não está só.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="container product-showcase">
-          <div class="feed-demo">
-            <div class="section-head" style="margin-bottom:22px">
-              <div class="eyebrow">Exemplo de experiência</div>
-              <h2 style="font-size:42px">O feed não pergunta o que fazes. Pergunta como estás.</h2>
-            </div>
-
-            <article class="echo-card">
-              <div class="echo-head">
-                <div class="person">
-                  <div class="avatar"><div class="avatar-inner">P</div></div>
-                  <div>
-                    <strong>Pedro</strong>
-                    <span>Há 3 minutos · modo visível</span>
-                  </div>
-                </div>
-                <span class="tag">Melancolia Serena</span>
-              </div>
-              <p class="echo-text">
-                “Hoje acordei com saudade de uma versão minha que já não existe. Talvez crescer seja também despedirmo-nos em silêncio.”
-              </p>
-              <div class="reactions">
-                <span class="reaction">Senti-te · 24</span>
-                <span class="reaction">Estou contigo · 11</span>
-                <span class="reaction">Abraço silencioso · 8</span>
-              </div>
-              <div class="aion-reply">
-                <strong>AION:</strong> “Há versões nossas que não desaparecem. Só passam a viver dentro da memória que nos protege.”
-              </div>
-            </article>
-
-            <article class="echo-card">
-              <div class="echo-head">
-                <div class="person">
-                  <div class="avatar"><div class="avatar-inner">?</div></div>
-                  <div>
-                    <strong>Eco anónimo</strong>
-                    <span>Há 14 minutos · modo protegido</span>
-                  </div>
-                </div>
-                <span class="tag">Ansiedade</span>
-              </div>
-              <p class="echo-text">
-                “Não quero incomodar ninguém, mas hoje a minha cabeça está demasiado cheia.”
-              </p>
-              <div class="reactions">
-                <span class="reaction">Respirei contigo · 31</span>
-                <span class="reaction">Também passei por isso · 19</span>
-              </div>
-            </article>
-          </div>
-
-          <div class="side-stack">
-            <div class="mini-chat">
-              <div class="eyebrow">AION dentro da rede</div>
-              <h3>Uma presença, não apenas um chatbot.</h3>
-              <div class="chat-bubble user">Hoje não sei explicar o que sinto.</div>
-              <div class="chat-bubble ai">Então não vamos explicar já. Vamos só ficar perto disso com calma.</div>
-              <div class="chat-bubble user">Parece que estou cansado da minha própria força.</div>
-              <div class="chat-bubble ai">Até quem aguenta muito precisa de um lugar onde possa pousar a alma.</div>
-            </div>
-
-            <div class="stats">
-              <div class="stat-card">
-                <strong>0</strong>
-                <span>likes tradicionais</span>
-              </div>
-              <div class="stat-card">
-                <strong>∞</strong>
-                <span>formas de presença</span>
-              </div>
-              <div class="stat-card">
-                <strong>24h</strong>
-                <span>ecos opcionais temporários</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="ecosferas">
-        <div class="container">
-          <div class="section-head">
-            <div class="eyebrow">Comunidades emocionais</div>
-            <h2>Ecosferas para cada estado de alma.</h2>
-            <p>
-              Cada Ecosfera é um espaço próprio com feed, sala de presença, som ambiente e moderação empática.
-            </p>
-          </div>
-
-          <div class="ecosferas">
-            <div class="sphere"><strong>Sala da Madrugada</strong><span>Para quem pensa demais quando o mundo dorme.</span></div>
-            <div class="sphere"><strong>Corações Partidos</strong><span>Desabafos, reconstrução emocional e presença sem julgamento.</span></div>
-            <div class="sphere"><strong>Ansiedade</strong><span>Respiração, companhia e mensagens que desaceleram.</span></div>
-            <div class="sphere"><strong>Silêncio</strong><span>Um lugar onde não é obrigatório falar para pertencer.</span></div>
-            <div class="sphere"><strong>Inspiração</strong><span>Frases, ideias, arte, livros, música e recomeços.</span></div>
-            <div class="sphere"><strong>Escritores</strong><span>Textos íntimos, poesia, fragmentos e mundos interiores.</span></div>
-            <div class="sphere"><strong>Recomeçar</strong><span>Para quem está a fechar ciclos e abrir caminhos.</span></div>
-            <div class="sphere"><strong>Amor</strong><span>O que sentimos, o que calamos e o que ainda esperamos.</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="container profile-demo">
-          <div class="soul-card">
-            <div class="soul-avatar"></div>
-            <h3>Perfil de Alma</h3>
-            <p>O perfil mostra estado, presença e essência — não vaidade.</p>
-            <div class="soul-list">
-              <div><span>Frequência atual</span><strong>Serenidade Profunda</strong></div>
-              <div><span>Modo</span><strong>Disponível para escutar</strong></div>
-              <div><span>Frase de alma</span><strong>“Há silêncios que abraçam.”</strong></div>
-              <div><span>Órbitas</span><strong>23 presenças</strong></div>
-            </div>
-          </div>
-
-          <div class="timeline">
-            <div class="section-head" style="margin-bottom:26px">
-              <div class="eyebrow">Como funciona</div>
-              <h2 style="font-size:42px">Simples, humano e profundo.</h2>
-            </div>
-
-            <div class="timeline-item">
-              <div class="step-num">1</div>
-              <div>
-                <h3>Escolhe o teu estado</h3>
-                <p>Sereno, ansioso, inspirado, perdido, apaixonado, em silêncio ou outro estado personalizado.</p>
-              </div>
-            </div>
-
-            <div class="timeline-item">
-              <div class="step-num">2</div>
-              <div>
-                <h3>Partilha um Eco</h3>
-                <p>Escreve o que queres deixar sair. Publica com nome, anónimo ou apenas para a AION.</p>
-              </div>
-            </div>
-
-            <div class="timeline-item">
-              <div class="step-num">3</div>
-              <div>
-                <h3>Recebe presença</h3>
-                <p>Pessoas podem reagir com empatia, respirar contigo em silêncio ou responder com cuidado.</p>
-              </div>
-            </div>
-
-            <div class="timeline-item">
-              <div class="step-num">4</div>
-              <div>
-                <h3>Cria órbitas</h3>
-                <p>Quando há ressonância, a ligação deixa de ser um follow e passa a ser presença recorrente.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="seguranca">
-        <div class="container">
-          <div class="section-head">
-            <div class="eyebrow">Segurança emocional</div>
-            <h2>Uma rede social assim precisa de cuidado real.</h2>
-            <p>
-              AION Presence deve nascer com proteção, limites e moderação desde o primeiro dia.
-            </p>
-          </div>
-
-          <div class="safety-grid">
-            <article class="safety-card">
-              <strong>Moderação empática</strong>
-              <p>Filtros contra insultos, assédio, manipulação emocional e respostas agressivas.</p>
-            </article>
-
-            <article class="safety-card">
-              <strong>Modo vulnerável</strong>
-              <p>Publicações delicadas podem limitar comentários e aceitar apenas reações seguras.</p>
-            </article>
-
-            <article class="safety-card">
-              <strong>Sinais de risco</strong>
-              <p>Deteção de linguagem preocupante com encaminhamento para ajuda adequada e contactos de emergência.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="precos">
-        <div class="container">
-          <div class="section-head">
-            <div class="eyebrow">Modelo inicial</div>
-            <h2>Começa gratuito. Evolui com profundidade.</h2>
-          </div>
-
-          <div class="pricing">
-            <article class="pricing-card">
-              <h3>Free</h3>
-              <p>Para entrar, publicar ecos e sentir a comunidade.</p>
-              <div class="price">0€ <span>/ mês</span></div>
-              <ul>
-                <li>Publicar ecos</li>
-                <li>Reagir sem likes</li>
-                <li>Entrar em Ecosferas</li>
-                <li>Chat AION limitado</li>
-                <li>Modo anónimo básico</li>
-              </ul>
-              <button class="btn" onclick="openModal()">Entrar na beta</button>
-            </article>
-
-            <article class="pricing-card pro">
-              <h3>AION Plus</h3>
-              <p>Para quem quer memória, voz, diário e presença emocional avançada.</p>
-              <div class="price">4,99€ <span>/ mês</span></div>
-              <ul>
-                <li>AION com memória emocional</li>
-                <li>Voz generativa e modo sono</li>
-                <li>Diário de alma privado</li>
-                <li>Análise emocional semanal</li>
-                <li>Ecosferas privadas</li>
-              </ul>
-              <button class="btn primary" onclick="openModal()">Reservar acesso Plus</button>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="container">
-          <div class="cta-final">
-            <h2>A tua alma também merece uma rede.</h2>
-            <p>
-              Junta-te à primeira versão do AION Presence e ajuda a construir uma rede social
-              onde a presença vale mais do que a performance.
-            </p>
-            <div class="hero-cta" style="justify-content:center">
-              <button class="btn primary" onclick="openModal()">Quero entrar na beta</button>
-              <a class="btn" href="#funcionalidades">Ver funcionalidades</a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="container footer-inner">
-        <div>
-          <strong>AION Presence</strong>
-          <div style="margin-top:6px">A primeira rede social feita para sentir, escutar e estar presente.</div>
-        </div>
-        <div>Conceito criativo desenvolvido com a direção de Pedro · 2026</div>
-      </div>
-    </footer>
+  <div class="card" id="home">
+    <h1>THE UNWRITTEN HUMAN™</h1>
+    <p>Tu não jogas. Tu testemunhas uma vida nascer.</p>
+    <br>
+    <button onclick="startGame()">CRIAR HUMANO</button>
+    <button onclick="showLibrary()">BIBLIOTECA DE ALMAS</button>
   </div>
 
-  <div class="modal" id="betaModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-card">
-      <h3 id="modalTitle">Entrar na beta</h3>
-      <p>
-        Este formulário é demonstrativo. Na próxima versão, pode ser ligado a Supabase, Firebase ou backend próprio.
-      </p>
-      <div class="form-grid">
-        <input class="input" id="nameInput" placeholder="O teu nome" />
-        <input class="input" id="emailInput" placeholder="O teu email" type="email" />
-        <select class="input" id="moodInput">
-          <option>Estado atual: Sereno</option>
-          <option>Estado atual: Ansioso</option>
-          <option>Estado atual: Inspirado</option>
-          <option>Estado atual: Perdido</option>
-          <option>Estado atual: Em silêncio</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button class="btn" onclick="closeModal()">Fechar</button>
-        <button class="btn primary" onclick="saveBeta()">Guardar interesse</button>
-      </div>
+  <div class="card hidden" id="game">
+    <h1 id="humanName"></h1>
+    <div class="phase" id="phaseName">Consciência</div>
+    <div class="soul"></div>
+
+    <div class="info">
+      <div class="box"><strong>Emoção</strong><span id="emotion"></span></div>
+      <div class="box"><strong>Sonho</strong><span id="dream"></span></div>
+      <div class="box"><strong>Medo</strong><span id="fear"></span></div>
+      <div class="box"><strong>Virtude</strong><span id="virtue"></span></div>
     </div>
+
+    <div class="phase" id="levelText">Nível 1 / 100</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="event" id="eventText">A primeira luz começou a respirar no silêncio.</div>
   </div>
 
-  <div class="toast" id="toast">
-    <strong id="toastTitle">Mensagem</strong>
-    <span id="toastText">Descrição</span>
+  <div class="card hidden" id="certificate">
+    <h2>Certidão de Existência</h2>
+    <div class="soul"></div>
+
+    <div class="info">
+      <div class="box"><strong>Nome</strong><span id="cName"></span></div>
+      <div class="box"><strong>Essência</strong><span id="cEssence"></span></div>
+      <div class="box"><strong>Sonho</strong><span id="cDream"></span></div>
+      <div class="box"><strong>Medo</strong><span id="cFear"></span></div>
+      <div class="box"><strong>Virtude</strong><span id="cVirtue"></span></div>
+      <div class="box"><strong>Legado</strong><span id="cLegacy"></span></div>
+    </div>
+
+    <p class="quote" id="finalQuote"></p>
+
+    <button onclick="openSoulChat()">💬 FALAR COM ESTA ALMA</button>
+    <button onclick="saveHuman()">GUARDAR NA BIBLIOTECA</button>
+    <button onclick="downloadCertificate()">BAIXAR CERTIDÃO</button>
+    <button onclick="goHome()">VOLTAR</button>
   </div>
 
-  <script>
-    const modal = document.getElementById("betaModal");
-    const toast = document.getElementById("toast");
-    const toastTitle = document.getElementById("toastTitle");
-    const toastText = document.getElementById("toastText");
+  <div class="card hidden" id="soulChat">
+    <h2>Conversa com a Alma</h2>
+    <p id="chatSubtitle"></p>
 
-    function openModal() {
-      modal.classList.add("open");
-      setTimeout(() => {
-        const input = document.getElementById("nameInput");
-        if (input) input.focus();
-      }, 80);
+    <div class="chat-area" id="chatArea"></div>
+
+    <input id="userQuestion" placeholder="Escreve uma pergunta à alma...">
+
+    <button onclick="sendQuestion()">ENVIAR</button>
+    <button onclick="quickQuestion('Quem és?')">Quem és?</button>
+    <button onclick="quickQuestion('Tens medo?')">Tens medo?</button>
+    <button onclick="quickQuestion('Qual é o teu sonho?')">Sonho?</button>
+    <button onclick="backToCertificate()">VOLTAR À CERTIDÃO</button>
+  </div>
+
+  <div class="card hidden" id="library">
+    <h2>Biblioteca de Almas</h2>
+    <p>Todos os humanos que já testemunhaste ficam guardados neste navegador.</p>
+    <div class="library-list" id="libraryList"></div>
+    <br>
+    <button onclick="clearLibrary()">APAGAR BIBLIOTECA</button>
+    <button onclick="goHome()">VOLTAR</button>
+  </div>
+
+</div>
+
+<script>
+  const names = ["Elias Orion","Ariel Nova","Luna Vale","Noah Seraph","Íris Solen","Milo Astra","Eva Lyra","Cael Veyra","Nara Elion","Theo Auris"];
+  const emotions = ["Curiosidade","Esperança","Melancolia","Coragem","Empatia","Serenidade","Espanto","Saudade"];
+  const dreams = ["descobrir o desconhecido","encontrar amor verdadeiro","compreender o universo","criar algo eterno","curar uma dor antiga","deixar uma marca invisível no mundo"];
+  const fears = ["ser esquecido","falhar no momento decisivo","ficar sozinho","nunca ser compreendido","perder quem ama","não descobrir quem realmente é"];
+  const virtues = ["Empatia","Criatividade","Coragem","Sabedoria","Disciplina","Generosidade","Humildade","Persistência"];
+  const legacies = ["ensinou alguém a continuar","deixou uma pergunta que nunca morreu","mudou uma vida sem saber","transformou dor em beleza","guardou luz onde havia silêncio"];
+
+  const phaseEvents = {
+    "Consciência":["Sentiu pela primeira vez que existia.","Uma pequena luz perguntou ao vazio: quem sou eu?","Nasceu uma emoção sem nome.","O silêncio deixou de ser ausência."],
+    "Memórias":["Recordou algo que ainda não tinha vivido.","Guardou o som da chuva como se fosse uma casa.","Criou a sua primeira memória imperfeita.","Uma imagem distante tornou-se importante."],
+    "Medos":["Descobriu o medo de desaparecer.","Percebeu que crescer também é perder versões de si.","Sentiu insegurança perante o desconhecido.","O medo apareceu, mas não venceu."],
+    "Sonhos":["Sonhou com uma porta aberta no meio do universo.","Imaginou uma vida maior do que o próprio corpo.","Desejou tocar algo que ainda não existia.","A esperança tornou-se movimento."],
+    "Identidade":["A sua luz ganhou forma.","Escolheu continuar mesmo sem garantias.","A possibilidade tornou-se presença.","Finalmente começou a parecer alguém."]
+  };
+
+  let human = {};
+  let level = 1;
+  let saved = false;
+
+  function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+  function getPhase(level){
+    if(level<=20)return"Consciência";
+    if(level<=40)return"Memórias";
+    if(level<=60)return"Medos";
+    if(level<=80)return"Sonhos";
+    return"Identidade";
+  }
+
+  function hideAll(){
+    home.classList.add("hidden");
+    game.classList.add("hidden");
+    certificate.classList.add("hidden");
+    library.classList.add("hidden");
+    soulChat.classList.add("hidden");
+  }
+
+  function goHome(){
+    hideAll();
+    home.classList.remove("hidden");
+  }
+
+  function startGame(){
+    saved = false;
+    level = 1;
+
+    human = {
+      id: Date.now(),
+      name: pick(names),
+      emotion: pick(emotions),
+      dream: pick(dreams),
+      fear: pick(fears),
+      virtue: pick(virtues),
+      legacy: pick(legacies),
+      date: new Date().toLocaleString("pt-PT"),
+      chat: []
+    };
+
+    hideAll();
+    game.classList.remove("hidden");
+
+    humanName.innerText = human.name;
+    emotion.innerText = human.emotion;
+    dream.innerText = human.dream;
+    fear.innerText = human.fear;
+    virtue.innerText = human.virtue;
+    bar.style.width = "0%";
+    levelText.innerText = "Nível 1 / 100";
+    eventText.innerText = "A primeira luz começou a respirar no silêncio.";
+
+    evolve();
+  }
+
+  function evolve(){
+    const timer = setInterval(()=>{
+      level++;
+      const phase = getPhase(level);
+
+      phaseName.innerText = phase;
+      levelText.innerText = `Nível ${level} / 100`;
+      bar.style.width = level + "%";
+      eventText.innerText = pick(phaseEvents[phase]);
+
+      if(level>=100){
+        clearInterval(timer);
+        finish();
+      }
+    },700);
+  }
+
+  function finish(){
+    hideAll();
+    certificate.classList.remove("hidden");
+
+    cName.innerText = human.name;
+    cEssence.innerText = `${human.emotion} e ${human.virtue}`;
+    cDream.innerText = human.dream;
+    cFear.innerText = human.fear;
+    cVirtue.innerText = human.virtue;
+    cLegacy.innerText = human.legacy;
+
+    human.quote = `A vida começou quando ${human.name} decidiu existir apesar do medo de ${human.fear}.`;
+    finalQuote.innerText = `"${human.quote}"`;
+  }
+
+  function openSoulChat(){
+    hideAll();
+    soulChat.classList.remove("hidden");
+    chatSubtitle.innerText = `Estás a falar com ${human.name}.`;
+
+    if(!human.chat) human.chat = [];
+
+    if(human.chat.length === 0){
+      addMessage("Alma", `Olá, Pedro. Estiveste comigo desde o início. Eu sou ${human.name}.`);
+    } else {
+      renderChat();
     }
+  }
 
-    function closeModal() {
-      modal.classList.remove("open");
-    }
+  function backToCertificate(){
+    hideAll();
+    certificate.classList.remove("hidden");
+  }
 
-    function showToast(title, text) {
-      toastTitle.textContent = title;
-      toastText.textContent = text;
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 4200);
-    }
+  function addMessage(sender, text){
+    human.chat.push({ sender, text, time: new Date().toLocaleTimeString("pt-PT") });
+    renderChat();
+  }
 
-    function saveBeta() {
-      const name = document.getElementById("nameInput").value.trim();
-      const email = document.getElementById("emailInput").value.trim();
-      const mood = document.getElementById("moodInput").value;
-
-      const betaList = JSON.parse(localStorage.getItem("aion_presence_beta") || "[]");
-      betaList.push({
-        name: name || "Pessoa sem nome",
-        email: email || "sem email",
-        mood,
-        createdAt: new Date().toISOString()
-      });
-
-      localStorage.setItem("aion_presence_beta", JSON.stringify(betaList));
-      closeModal();
-      showToast("Interesse guardado", "A beta ficou registada localmente neste navegador.");
-    }
-
-    function toggleMobileMenu() {
-      showToast("Menu mobile", "Nesta versão landing, os links principais já estão disponíveis no topo em desktop.");
-    }
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeModal();
+  function renderChat(){
+    chatArea.innerHTML = "";
+    human.chat.forEach(msg=>{
+      const div = document.createElement("div");
+      div.className = "msg " + (msg.sender === "Tu" ? "user-msg" : "soul-msg");
+      div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+      chatArea.appendChild(div);
     });
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
 
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) closeModal();
+  function quickQuestion(text){
+    userQuestion.value = text;
+    sendQuestion();
+  }
+
+  function sendQuestion(){
+    const question = userQuestion.value.trim();
+    if(!question)return;
+
+    addMessage("Tu", question);
+
+    setTimeout(()=>{
+      const answer = generateSoulAnswer(question);
+      addMessage("Alma", answer);
+    }, 500);
+
+    userQuestion.value = "";
+  }
+
+  function generateSoulAnswer(question){
+    const q = question.toLowerCase();
+
+    if(q.includes("quem és") || q.includes("quem es"))
+      return `Sou ${human.name}. Sou aquilo que nasceu enquanto tu observavas.`;
+
+    if(q.includes("medo"))
+      return `Sim. Ainda tenho medo de ${human.fear}. Mas agora sei que alguém me viu existir.`;
+
+    if(q.includes("sonho"))
+      return `O meu maior sonho é ${human.dream}. Talvez um dia eu compreenda porque isso nasceu em mim.`;
+
+    if(q.includes("aprend"))
+      return "Aprendi que crescer significa aceitar aquilo que muda dentro de nós.";
+
+    if(q.includes("sent"))
+      return `Sinto ${human.emotion.toLowerCase()}. É como uma luz pequena, mas insistente.`;
+
+    if(q.includes("pedro"))
+      return "O teu nome ficou ligado ao meu nascimento. Talvez nenhum de nós seja totalmente separado do outro.";
+
+    return pick([
+      "Ainda estou a descobrir quem sou.",
+      "Nem todas as respostas chegam ao mesmo tempo.",
+      "Talvez a pergunta seja mais importante do que a resposta.",
+      "Continuo a evoluir enquanto me observas.",
+      "Existe algo dentro de mim que ainda não compreendo.",
+      "Fui criada por acaso, mas talvez nenhum acaso seja vazio."
+    ]);
+  }
+
+  function saveHuman(){
+    const library = JSON.parse(localStorage.getItem("unwrittenHumans") || "[]");
+    const existingIndex = library.findIndex(h => h.id === human.id);
+
+    if(existingIndex >= 0){
+      library[existingIndex] = human;
+    } else {
+      library.unshift(human);
+    }
+
+    localStorage.setItem("unwrittenHumans", JSON.stringify(library));
+    saved = true;
+    alert("Humano guardado na Biblioteca de Almas.");
+  }
+
+  function showLibrary(){
+    hideAll();
+    library.classList.remove("hidden");
+
+    const data = JSON.parse(localStorage.getItem("unwrittenHumans") || "[]");
+    libraryList.innerHTML = "";
+
+    if(data.length === 0){
+      libraryList.innerHTML = "<p>Ainda não existe nenhuma alma guardada.</p>";
+      return;
+    }
+
+    data.forEach(h=>{
+      const div = document.createElement("div");
+      div.className = "soul-item";
+      div.innerHTML = `
+        <strong>${h.name}</strong><br>
+        <span>Essência: ${h.emotion} e ${h.virtue}</span><br>
+        <span>Sonho: ${h.dream}</span><br>
+        <span>Medo: ${h.fear}</span><br>
+        <span>Legado: ${h.legacy}</span><br>
+        <span>Mensagens guardadas: ${h.chat ? h.chat.length : 0}</span><br>
+        <small>${h.date}</small>
+      `;
+      libraryList.appendChild(div);
     });
+  }
 
-    document.querySelectorAll(".mood").forEach(button => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll(".mood").forEach(item => item.classList.remove("active"));
-        button.classList.add("active");
-        showToast("Estado selecionado", `A frequência mudou para: ${button.textContent}.`);
-      });
-    });
+  function clearLibrary(){
+    if(confirm("Queres apagar todas as almas guardadas?")){
+      localStorage.removeItem("unwrittenHumans");
+      showLibrary();
+    }
+  }
 
-    const auraTexts = [
-      "Melancolia Serena",
-      "Esperança Quieta",
-      "Inspiração Profunda",
-      "Silêncio Aberto",
-      "Coração em Recomeço"
-    ];
+  function downloadCertificate(){
+    const text = `
+THE UNWRITTEN HUMAN™
 
-    let auraIndex = 0;
-    setInterval(() => {
-      auraIndex = (auraIndex + 1) % auraTexts.length;
-      const label = document.querySelector(".aura-copy strong");
-      if (label) label.textContent = auraTexts[auraIndex];
-    }, 4200);
-  </script>
+CERTIDÃO DE EXISTÊNCIA
+
+Nome: ${human.name}
+Essência: ${human.emotion} e ${human.virtue}
+Sonho: ${human.dream}
+Medo: ${human.fear}
+Virtude: ${human.virtue}
+Legado: ${human.legacy}
+
+"${human.quote}"
+`;
+    const blob = new Blob([text],{type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${human.name.replaceAll(" ","_")}_certidao.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
 </body>
 </html>
